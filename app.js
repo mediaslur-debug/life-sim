@@ -1,14 +1,19 @@
-// Import konfigurasi aman dari config.js
-import { CONFIG } from './config.js';
-
 // Import fungsi Firebase SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// Menggunakan konfigurasi dari CONFIG
-const firebaseConfig = CONFIG.FIREBASE_CONFIG;
-const GEMINI_API_KEY = CONFIG.GEMINI_API_KEY;
+// Konfigurasi langsung di sini
+const firebaseConfig = {
+  apiKey: "AIzaSyBO5EgKM0er9tXOql_mMFXyWm0GgWGqA7Q",
+  authDomain: "life-sim-37cf9.firebaseapp.com",
+  projectId: "life-sim-37cf9",
+  storageBucket: "life-sim-37cf9.firebasestorage.app",
+  messagingSenderId: "807477304749",
+  appId: "1:807477304749:web:77493cca0b32ad73299524"
+};
+
+const GEMINI_API_KEY = "AQ.Ab8RN6IGr1pG8gT8XxVpCpN2cZNw6MJ4xczJW3EWsad62cngFg";
 const MODEL_NAME = "gemini-2.5-flash";
 
 // Inisialisasi Firebase
@@ -51,7 +56,6 @@ async function muatAtauBuatKarakter(uid) {
     updateUI();
     tampilkanCeritaTerakhir();
   } else {
-    // Data default untuk karakter baru
     characterData = {
       nama: "Rian",
       umur: 20,
@@ -150,7 +154,6 @@ async function prosesPilihan(pilihan) {
 
     const hasil = JSON.parse(text);
 
-    // Update status lokal
     characterData.uang += hasil.perubahan.uang || 0;
     characterData.energi = Math.max(0, Math.min(100, characterData.energi + (hasil.perubahan.energi || 0)));
     characterData.stres = Math.max(0, Math.min(100, characterData.stres + (hasil.perubahan.stres || 0)));
@@ -162,15 +165,13 @@ async function prosesPilihan(pilihan) {
     if (hasil.memoriBaru && hasil.memoriBaru.length > 0) {
       characterData.memoryLog.push(hasil.memoriBaru);
       if (characterData.memoryLog.length > 10) {
-        characterData.memoryLog.shift(); // Jaga agar memori tidak terlalu panjang
+        characterData.memoryLog.shift();
       }
     }
 
-    // Simpan progres ke Cloud Firestore
     const userRef = doc(db, "users", currentUser.uid);
     await setDoc(userRef, characterData);
 
-    // Perbarui Tampilan
     updateUI();
     tampilkanCeritaTerakhir();
 
