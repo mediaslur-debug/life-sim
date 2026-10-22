@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adult Life Simulator AI</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="game-container">
+    <header>
+      <h1>Simulasi Kehidupan AI</h1>
+      <div id="user-status">Menghubungkan ke Firebase...</div>
+    </header>
+
+    <!-- Bar Status Karakter -->
+    <div class="stats-panel">
+      <div class="stat-item">
+        <span class="label">Nama:</span>
+        <span id="stat-nama" class="value">-</span>
+      </div>
+      <div class="stat-item">
+        <span class="label">Umur:</span>
+        <span id="stat-umur" class="value">0</span> thn
+      </div>
+      <div class="stat-item">
+        <span class="label">Uang:</span>
+        <span id="stat-uang" class="value">$0</span>
+      </div>
+      <div class="stat-item">
+        <span class="label">Energi:</span>
+        <span id="stat-energi" class="value">100%</span>
+      </div>
+      <div class="stat-item">
+        <span class="label">Stres:</span>
+        <span id="stat-stres" class="value">0%</span>
+      </div>
+    </div>
+
+    <!-- Tampilan Cerita Utama -->
+    <main class="story-panel">
+      <div id="story-text">
+        Memuat cerita kehidupan kamu...
+      </div>
+      <div id="loading-indicator" class="hidden">
+        <div class="spinner"></div>
+        <p>AI sedang merangkai cerita berikutnya...</p>
+      </div>
+    </main>
+
+    <!-- Opsi Pilihan Aksi -->
+    <footer class="options-panel" id="options-container">
+      <!-- Tombol opsi akan dibuat otomatis lewat JavaScript -->
+    </footer>
+  </div>
+
+  <!-- Memuat Script Game sebagai ES Module -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
