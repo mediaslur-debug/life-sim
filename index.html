@@ -1,61 +1,1008 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Adult Life Simulator AI</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sakura Chronicles: Life & Love Sim</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .font-header {
+            font-family: 'Fredoka', cursive;
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(244, 114, 182, 0.5);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(244, 114, 182, 0.8);
+        }
+        
+        /* Glassmorphism styles */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .pulse-subtle {
+            animation: pulseSubtle 2s infinite;
+        }
+        @keyframes pulseSubtle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
 </head>
-<body>
+<body class="bg-slate-950 text-slate-100 h-screen w-screen overflow-hidden flex flex-col justify-center items-center relative">
 
-  <div class="game-container">
-    <header>
-      <h1>Simulasi Kehidupan AI</h1>
-      <div id="user-status">Menghubungkan...</div>
-    </header>
+    <!-- MAIN GAME CONTAINER -->
+    <div id="game-app" class="relative w-full h-full max-w-6xl max-h-[960px] bg-slate-900 flex flex-col justify-between overflow-hidden shadow-2xl md:rounded-3xl border border-slate-800/80">
 
-    <!-- Bar Status Karakter -->
-    <div class="stats-panel">
-      <div class="stat-item">
-        <span class="label">Nama</span>
-        <span id="stat-nama" class="value">-</span>
-      </div>
-      <div class="stat-item">
-        <span class="label">Umur</span>
-        <span id="stat-umur" class="value">0</span>
-      </div>
-      <div class="stat-item">
-        <span class="label">Uang</span>
-        <span id="stat-uang" class="value">$0</span>
-      </div>
-      <div class="stat-item">
-        <span class="label">Energi</span>
-        <span id="stat-energi" class="value">100%</span>
-      </div>
-      <div class="stat-item">
-        <span class="label">Stres</span>
-        <span id="stat-stres" class="value">0%</span>
-      </div>
+        <!-- BACKGROUND LAYER -->
+        <div id="bg-layer" class="absolute inset-0 bg-cover bg-center transition-all duration-700 z-0 scale-105" 
+             style="background-image: url('https://images.unsplash.com/photo-1519817650390-64a93db51149?q=80&w=1200&auto=format&fit=crop');">
+            <div id="bg-overlay" class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-black/30 transition-all duration-500"></div>
+        </div>
+
+        <!-- TOP BAR: TIME, CALENDAR, STATS & CLOUD STATUS -->
+        <header class="relative z-20 p-2 md:p-4 flex flex-wrap justify-between items-center glass-panel rounded-b-2xl mx-2 md:mx-4 mt-2 gap-2 shadow-2xl">
+            <!-- Time & Calendar -->
+            <div class="flex items-center gap-2 md:gap-4">
+                <div class="bg-indigo-950/80 border border-indigo-500/30 px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs md:text-sm">
+                    <i id="time-icon" class="fa-solid fa-sun text-amber-400 text-sm md:text-base"></i>
+                    <div>
+                        <div class="font-bold text-amber-200 font-header leading-none" id="clock-day">Hari 1 - Sen</div>
+                        <div class="text-[10px] md:text-xs text-indigo-300 font-medium" id="clock-season">Musim Semi (Pagi)</div>
+                    </div>
+                </div>
+
+                <!-- Player Stats Bar -->
+                <div class="flex items-center gap-2 text-xs md:text-sm">
+                    <div class="flex items-center gap-1.5 bg-rose-500/20 border border-rose-500/40 px-2.5 py-1 rounded-xl" title="Stamina Harian">
+                        <i class="fa-solid fa-bolt text-amber-400"></i>
+                        <span class="font-bold text-rose-200"><span id="stat-stamina">100</span>/<span id="stat-max-stamina">100</span></span>
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-amber-500/20 border border-amber-500/40 px-2.5 py-1 rounded-xl" title="Uang / Koin">
+                        <i class="fa-solid fa-coins text-amber-300"></i>
+                        <span class="font-bold text-amber-200">¥<span id="stat-coins">500</span></span>
+                    </div>
+                    <div class="hidden sm:flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-1 rounded-xl" title="Kharisma & Kecerdasan">
+                        <i class="fa-solid fa-star text-emerald-400"></i>
+                        <span class="font-bold text-emerald-200">Lvl <span id="stat-charm">1</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Controls & Cloud Save -->
+            <div class="flex items-center gap-1.5 md:gap-2">
+                <button id="btn-sleep" title="Tidur untuk Lanjut Hari Berikutnya" class="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg transition flex items-center gap-1.5 border border-purple-400/30">
+                    <i class="fa-solid fa-bed"></i>
+                    <span class="hidden sm:inline">Tidur</span>
+                </button>
+                <button id="btn-map" title="Buka Peta Lokasi" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold shadow-lg transition flex items-center gap-1.5 border border-sky-400/30">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                    <span class="hidden sm:inline">Peta</span>
+                </button>
+                <button id="btn-inventory-modal" title="Tas & Hadiah" class="p-2 bg-slate-800 hover:bg-slate-700 text-pink-300 rounded-xl border border-slate-700 transition">
+                    <i class="fa-solid fa-bag-shopping text-sm md:text-base"></i>
+                </button>
+                <button id="btn-auth-status" class="flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-950/60 border border-emerald-500/40 rounded-xl text-emerald-300 text-xs transition">
+                    <i id="cloud-icon" class="fa-solid fa-cloud-check text-emerald-400"></i>
+                    <span id="cloud-text" class="hidden lg:inline text-[11px]">Tersimpan</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- CENTER CONTENT DISPLAY (DYNAMIC VISUAL NOVEL OR MAP VIEW) -->
+        <div id="main-viewport" class="relative z-10 flex-1 flex flex-col justify-between p-2 md:p-4 overflow-hidden">
+            
+            <!-- SPRITE DISPLAY LAYER (WHEN IN DIALOGUE SCENE) -->
+            <div id="sprite-layer" class="flex-1 flex items-end justify-center relative pointer-events-none transition-all duration-500">
+                <img id="npc-sprite" 
+                     src="" 
+                     alt="Character Sprite" 
+                     class="h-[65%] sm:h-[80%] md:h-[90%] max-h-[500px] object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.9)] transition-all duration-300 hidden">
+            </div>
+
+            <!-- MAP SELECTION OVERLAY (WHEN MAP IS OPEN) -->
+            <div id="map-view" class="hidden inset-0 absolute z-30 p-4 md:p-8 glass-panel m-2 md:m-4 rounded-2xl flex-col fade-in overflow-y-auto">
+                <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
+                    <h2 class="text-xl font-bold font-header text-amber-300 flex items-center gap-2">
+                        <i class="fa-solid fa-compass"></i> Peta Kota Sakura
+                    </h2>
+                    <button id="btn-close-map" class="text-slate-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 flex-1">
+                    <!-- Home -->
+                    <div data-location="home" class="loc-card glass-card hover:border-pink-500 p-4 rounded-2xl cursor-pointer transition flex flex-col justify-between group">
+                        <div>
+                            <div class="text-pink-400 font-bold text-base md:text-lg mb-1 flex items-center gap-2">
+                                <i class="fa-solid fa-house"></i> Rumah Kamu
+                            </div>
+                            <p class="text-xs text-slate-300">Tempat istirahat dan memulihkan stamina harian.</p>
+                        </div>
+                        <span class="text-[11px] font-semibold text-emerald-400 mt-3 group-hover:translate-x-1 transition-transform inline-block">Kunjungi &rarr;</span>
+                    </div>
+
+                    <!-- School -->
+                    <div data-location="school" class="loc-card glass-card hover:border-indigo-500 p-4 rounded-2xl cursor-pointer transition flex flex-col justify-between group">
+                        <div>
+                            <div class="text-indigo-400 font-bold text-base md:text-lg mb-1 flex items-center gap-2">
+                                <i class="fa-solid fa-school"></i> SMA Sakura
+                            </div>
+                            <p class="text-xs text-slate-300">Belajar untuk meningkatkan Kecerdasan (+Kharisma).</p>
+                        </div>
+                        <div class="flex justify-between items-center mt-3">
+                            <span class="text-[10px] text-amber-300 font-bold">-20 Stamina</span>
+                            <span class="text-[11px] font-semibold text-emerald-400 group-hover:translate-x-1 transition-transform">Kunjungi &rarr;</span>
+                        </div>
+                    </div>
+
+                    <!-- Cafe -->
+                    <div data-location="cafe" class="loc-card glass-card hover:border-amber-500 p-4 rounded-2xl cursor-pointer transition flex flex-col justify-between group">
+                        <div>
+                            <div class="text-amber-400 font-bold text-base md:text-lg mb-1 flex items-center gap-2">
+                                <i class="fa-solid fa-mug-saucer"></i> Kafe Maid "Lumiere"
+                            </div>
+                            <p class="text-xs text-slate-300">Tempat kerja paruh waktu atau bertemu Aoi & Mei.</p>
+                        </div>
+                        <div class="flex justify-between items-center mt-3">
+                            <span class="text-[10px] text-emerald-300 font-bold">+150 Koin (Kerja)</span>
+                            <span class="text-[11px] font-semibold text-emerald-400 group-hover:translate-x-1 transition-transform">Kunjungi &rarr;</span>
+                        </div>
+                    </div>
+
+                    <!-- Mall / Gift Shop -->
+                    <div data-location="mall" class="loc-card glass-card hover:border-purple-500 p-4 rounded-2xl cursor-pointer transition flex flex-col justify-between group">
+                        <div>
+                            <div class="text-purple-400 font-bold text-base md:text-lg mb-1 flex items-center gap-2">
+                                <i class="fa-solid fa-store"></i> Pusat Perbelanjaan
+                            </div>
+                            <p class="text-xs text-slate-300">Beli hadiah favorit untuk meluluhkan hati para gadis.</p>
+                        </div>
+                        <span class="text-[11px] font-semibold text-emerald-400 mt-3 group-hover:translate-x-1 transition-transform inline-block">Kunjungi &rarr;</span>
+                    </div>
+
+                    <!-- Central Park -->
+                    <div data-location="park" class="loc-card glass-card hover:border-emerald-500 p-4 rounded-2xl cursor-pointer transition flex flex-col justify-between group">
+                        <div>
+                            <div class="text-emerald-400 font-bold text-base md:text-lg mb-1 flex items-center gap-2">
+                                <i class="fa-solid fa-tree"></i> Taman Bunga Sakura
+                            </div>
+                            <p class="text-xs text-slate-300">Tempat ideal untuk berkencan dan jalan-jalan santai.</p>
+                        </div>
+                        <div class="flex justify-between items-center mt-3">
+                            <span class="text-[10px] text-amber-300 font-bold">-15 Stamina</span>
+                            <span class="text-[11px] font-semibold text-emerald-400 group-hover:translate-x-1 transition-transform">Kunjungi &rarr;</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISUAL NOVEL DIALOGUE BOX & CHOICES -->
+            <div id="vn-box" class="relative z-20 flex flex-col gap-2 max-w-4xl mx-auto w-full">
+                
+                <!-- Action Choices Buttons -->
+                <div id="choices-container" class="hidden flex-col gap-2 mb-2 fade-in max-w-2xl mx-auto w-full">
+                    <!-- Choices injected by JS -->
+                </div>
+
+                <!-- Main Dialogue Box -->
+                <div id="dialogue-window" class="glass-panel rounded-2xl p-4 md:p-5 text-white shadow-2xl relative border border-slate-700/80 cursor-pointer flex flex-col justify-between min-h-[140px]">
+                    <!-- Character Name Banner -->
+                    <div class="absolute -top-3.5 left-6 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 text-white px-4 py-0.5 rounded-full font-bold text-xs md:text-sm tracking-wider shadow-lg border border-pink-300/30 font-header">
+                        <span id="speaker-name">Pikiranku</span>
+                    </div>
+
+                    <!-- Dialogue Text -->
+                    <div id="dialogue-text" class="mt-2 text-sm md:text-base leading-relaxed text-slate-100 font-medium">
+                        Memuat petualanganmu...
+                    </div>
+
+                    <!-- Footer Controls inside Dialogue -->
+                    <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-800/80">
+                        <div id="relationship-badge" class="hidden items-center gap-1.5 text-[11px] font-bold text-pink-300 bg-pink-950/60 px-2.5 py-0.5 rounded-full border border-pink-500/30">
+                            <i class="fa-solid fa-heart text-pink-400"></i>
+                            <span id="npc-status-text">Kenalan</span>
+                            (<span id="npc-affection-val">0</span>%)
+                        </div>
+                        <div class="text-pink-400 animate-bounce text-[11px] font-semibold ml-auto flex items-center gap-1">
+                            <span>Klik untuk lanjut</span>
+                            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- BOTTOM TAB NAVIGATOR -->
+        <nav class="relative z-20 bg-slate-950/90 border-t border-slate-800 px-2 py-2 flex justify-around items-center text-xs">
+            <button id="nav-btn-story" class="flex flex-col items-center gap-1 text-pink-400 font-bold">
+                <i class="fa-solid fa-comments text-base"></i>
+                <span>Cerita</span>
+            </button>
+            <button id="nav-btn-relationships" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 font-medium transition">
+                <i class="fa-solid fa-heart text-base"></i>
+                <span>Gadis</span>
+            </button>
+            <button id="nav-btn-jobs" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 font-medium transition">
+                <i class="fa-solid fa-briefcase text-base"></i>
+                <span>Aktivitas</span>
+            </button>
+            <button id="nav-btn-account" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 font-medium transition">
+                <i class="fa-solid fa-user-gear text-base"></i>
+                <span>Akun/Cloud</span>
+            </button>
+        </nav>
+
+        <!-- MODAL: RELATIONSHIPS OVERVIEW -->
+        <div id="modal-relationships" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div class="glass-panel w-full max-w-lg rounded-2xl p-5 text-white border border-slate-700 shadow-2xl fade-in max-h-[85vh] flex flex-col">
+                <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
+                    <h3 class="text-lg font-bold font-header text-pink-400 flex items-center gap-2">
+                        <i class="fa-solid fa-users"></i> Daftar Karakter Gadis
+                    </h3>
+                    <button class="close-modal text-slate-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div id="npc-list-container" class="space-y-3 overflow-y-auto pr-1 flex-1">
+                    <!-- Dynamic NPC Cards injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: INVENTORY & SHOP -->
+        <div id="modal-inventory" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div class="glass-panel w-full max-w-lg rounded-2xl p-5 text-white border border-slate-700 shadow-2xl fade-in max-h-[85vh] flex flex-col">
+                <div class="flex justify-between items-center mb-3 border-b border-slate-700 pb-2">
+                    <div class="flex gap-4">
+                        <button id="tab-inv-owned" class="text-pink-400 font-bold border-b-2 border-pink-500 pb-1 text-sm">Tas Saya</button>
+                        <button id="tab-inv-shop" class="text-slate-400 font-semibold hover:text-slate-200 pb-1 text-sm">Toko Hadiah</button>
+                    </div>
+                    <button class="close-modal text-slate-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div id="inventory-content" class="grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-y-auto pr-1 flex-1 py-2">
+                    <!-- Dynamic items -->
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: AUTHENTICATION & CLOUD SAVE -->
+        <div id="modal-auth" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div class="glass-panel w-full max-w-md rounded-2xl p-6 text-white border border-slate-700 shadow-2xl fade-in">
+                <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
+                    <h3 class="text-lg font-bold font-header text-emerald-400 flex items-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Firebase Cloud Sync
+                    </h3>
+                    <button class="close-modal text-slate-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <!-- Logged In State -->
+                <div id="auth-state-loggedin" class="hidden flex-col gap-3">
+                    <div class="bg-slate-800/90 p-3 rounded-xl border border-slate-700">
+                        <p class="text-xs text-slate-400">Akun Terhubung:</p>
+                        <p id="user-display-email" class="font-bold text-sm text-emerald-300 truncate">Anonim / Guest</p>
+                        <p id="user-display-uid" class="text-[10px] text-slate-500 font-mono mt-0.5 truncate"></p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="btn-save-cloud" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold text-xs transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-floppy-disk"></i> Simpan Online
+                        </button>
+                        <button id="btn-load-cloud" class="py-2.5 bg-sky-600 hover:bg-sky-500 rounded-xl font-bold text-xs transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-download"></i> Muat Awan
+                        </button>
+                    </div>
+                    <button id="btn-logout" class="w-full py-2 bg-slate-800 hover:bg-rose-900/60 text-rose-300 border border-slate-700 rounded-xl font-semibold text-xs transition mt-2">
+                        Keluar Akun
+                    </button>
+                </div>
+
+                <!-- Logged Out / Login Form -->
+                <div id="auth-state-loggedout" class="flex flex-col gap-3">
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Simpan progres game kamu ke Firebase Cloud agar bisa dimainkan bergantian di PC dan Smartphone tanpa kehilangan data!
+                    </p>
+                    <input type="email" id="input-auth-email" placeholder="Email Anda" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs focus:outline-none focus:border-pink-500 text-white">
+                    <input type="password" id="input-auth-pass" placeholder="Kata Sandi" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs focus:outline-none focus:border-pink-500 text-white">
+                    
+                    <div class="flex gap-2 mt-1">
+                        <button id="btn-auth-signin" class="flex-1 py-2 bg-pink-600 hover:bg-pink-500 rounded-xl font-bold text-xs transition">Masuk</button>
+                        <button id="btn-auth-signup" class="flex-1 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl font-bold text-xs transition">Daftar Baru</button>
+                    </div>
+                    <div class="relative my-1 text-center">
+                        <span class="bg-slate-900 px-2 text-[10px] text-slate-500 relative z-10">Atau</span>
+                        <div class="absolute inset-0 top-1/2 border-t border-slate-800"></div>
+                    </div>
+                    <button id="btn-auth-guest" class="w-full py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-semibold text-slate-300 transition">
+                        Main Mode Guest (Otomatis Simpan di HP/PC ini)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- NOTIFICATION TOAST -->
+        <div id="toast" class="hidden fixed bottom-16 left-1/2 -translate-x-1/2 z-50 bg-slate-800/95 text-white px-4 py-2.5 rounded-full border border-pink-500/50 shadow-2xl text-xs font-bold fade-in flex items-center gap-2 pointer-events-none">
+            <i class="fa-solid fa-sparkles text-pink-400"></i>
+            <span id="toast-text">Notifikasi Game</span>
+        </div>
+
     </div>
 
-    <!-- Tampilan Cerita Utama -->
-    <main class="story-panel">
-      <div id="story-text">
-        Memuat cerita kehidupan kamu...
-      </div>
-      <div id="loading-indicator" class="hidden">
-        <div class="spinner"></div>
-        <p>AI sedang merangkai takdir baru...</p>
-      </div>
-    </main>
+    <!-- FIREBASE MODULE & GAME ENGINE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    <!-- Opsi Pilihan Aksi -->
-    <footer class="options-panel" id="options-container">
-      <!-- Tombol opsi dimuat otomatis oleh JavaScript -->
-    </footer>
-  </div>
+        // Global Firebase Configuration
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : {
+                apiKey: "AIzaSyDemoConfigForDatingSimGame12345",
+                authDomain: "dating-sim-demo.firebaseapp.com",
+                projectId: "dating-sim-demo",
+                storageBucket: "dating-sim-demo.appspot.com",
+                messagingSenderId: "1234567890",
+                appId: "1:1234567890:web:demo12345"
+            };
 
-  <!-- Script utama game -->
-  <script type="module" src="app.js"></script>
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'dating-sim-game';
+
+        // Firebase Setup
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // DEFAULT INITIAL GAME STATE
+        let currentUser = null;
+        let gameState = {
+            day: 1,
+            timeOfDay: 0, // 0: Pagi, 1: Siang, 2: Sore, 3: Malam
+            season: 0,    // 0: Semi, 1: Panas, 2: Gugur, 3: Dingin
+            stamina: 100,
+            maxStamina: 100,
+            coins: 500,
+            charm: 1,
+            location: "home",
+            currentNpcId: null,
+            dialogueKey: "home_welcome",
+            dialogueIndex: 0,
+            inventory: {
+                boba: 2,
+                chocolate: 1,
+                flowers: 0,
+                ring: 0
+            },
+            npcs: {
+                aoi: {
+                    name: "Aoi Kirishima",
+                    role: "Ketua OSIS / Teman Sekelas",
+                    affection: 15,
+                    status: "Kenalan",
+                    favoriteItem: "boba",
+                    sprite: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
+                },
+                mei: {
+                    name: "Mei Tachibana",
+                    role: "Kasir Kafe Maid",
+                    affection: 5,
+                    status: "Kenalan",
+                    favoriteItem: "chocolate",
+                    sprite: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/35.png"
+                }
+            }
+        };
+
+        const seasons = ["Musim Semi", "Musim Panas", "Musim Gugur", "Musim Dingin"];
+        const timesOfDay = ["Pagi", "Siang", "Sore", "Malam"];
+        const daysOfWeek = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
+
+        // LOCATION BACKGROUNDS
+        const locationBg = {
+            home: "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1200&auto=format&fit=crop",
+            school: "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=1200&auto=format&fit=crop",
+            cafe: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1200&auto=format&fit=crop",
+            mall: "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?q=80&w=1200&auto=format&fit=crop",
+            park: "https://images.unsplash.com/photo-1519817650390-64a93db51149?q=80&w=1200&auto=format&fit=crop"
+        };
+
+        // ITEMS DATABASE
+        const itemsDB = {
+            boba: { name: "Boba Sweet Milk", price: 50, boost: 10, icon: "fa-mug-hot", desc: "Favorit Aoi untuk bersantai." },
+            chocolate: { name: "Cokelat Premium", price: 120, boost: 20, icon: "fa-cookie", desc: "Manis dan meleleh di mulut." },
+            flowers: { name: "Buket Mawar Pink", price: 300, boost: 35, icon: "fa-spa", desc: "Sangat ampuh meningkatkan rasa suka." },
+            ring: { name: "Cincin Perak", price: 1500, boost: 70, icon: "fa-ring", desc: "Syarat melamar menjadi Tunangan/Menikah." }
+        };
+
+        // DIALOGUES ENGINE DATABASE
+        const dialogueTree = {
+            "home_welcome": {
+                speaker: "Pikiranku",
+                text: "Hari baru dimulai! Kamu berada di kamar rumahmu. Apa yang ingin kamu lakukan hari ini?",
+                choices: [
+                    { text: "Buka Peta & Pergi Keluar (-10 Stamina)", action: "open_map" },
+                    { text: "Istirahat Sejenak (+15 Stamina)", action: "rest_home" }
+                ]
+            },
+            "school_study": {
+                speaker: "Guru Sekolah",
+                text: "Selamat datang di kelas! Pelajaran hari ini cukup padat.",
+                choices: [
+                    { text: "Belajar Sungguh-sungguh (+Kharisma, -25 Stamina)", action: "study" },
+                    { text: "Bicara dengan Aoi Kirishima", action: "talk_npc", npcId: "aoi" }
+                ]
+            },
+            "cafe_visit": {
+                speaker: "Kafe Lumiere",
+                text: "Aroma kopi yang harum menyambutmu di pintu masuk kafe.",
+                choices: [
+                    { text: "Kerja Part-Time Harian (+150 Koin, -30 Stamina)", action: "work_cafe" },
+                    { text: "Sapa Kasir Mei Tachibana", action: "talk_npc", npcId: "mei" }
+                ]
+            },
+            "park_visit": {
+                speaker: "Taman Sakura",
+                text: "Angin sepoi-sepoi bertiup di antara pepohonan yang rindang.",
+                choices: [
+                    { text: "Jalan-jalan Santai (+10 Stamina, -50 Koin Beli Camilan)", action: "walk_park" }
+                ]
+            },
+            "talk_aoi_start": {
+                speaker: "Aoi Kirishima",
+                npcId: "aoi",
+                text: "Oh, halo! Kamu sedang berkunjung ke sini juga? Senang bisa bertemu denganmu!",
+                choices: [
+                    { text: "Ajak ngobrol topik harian (+5 Affection, -10 Stamina)", action: "chat_npc", npcId: "aoi", boost: 5 },
+                    { text: "Beri Hadiah dari Tas", action: "give_gift_modal" }
+                ]
+            },
+            "talk_mei_start": {
+                speaker: "Mei Tachibana",
+                npcId: "mei",
+                text: "Selamat datang di Lumiere! Mau pesan kopi favoritmu hari ini?",
+                choices: [
+                    { text: "Puji keramahannya (+8 Affection, -10 Stamina)", action: "chat_npc", npcId: "mei", boost: 8 },
+                    { text: "Beri Hadiah dari Tas", action: "give_gift_modal" }
+                ]
+            }
+        };
+
+        // DOM ELEMENTS
+        const elClockDay = document.getElementById("clock-day");
+        const elClockSeason = document.getElementById("clock-season");
+        const elTimeIcon = document.getElementById("time-icon");
+        const elStatStamina = document.getElementById("stat-stamina");
+        const elStatMaxStamina = document.getElementById("stat-max-stamina");
+        const elStatCoins = document.getElementById("stat-coins");
+        const elStatCharm = document.getElementById("stat-charm");
+
+        const elBgLayer = document.getElementById("bg-layer");
+        const elNpcSprite = document.getElementById("npc-sprite");
+        const elSpeakerName = document.getElementById("speaker-name");
+        const elDialogueText = document.getElementById("dialogue-text");
+        const elChoicesContainer = document.getElementById("choices-container");
+        const elMapView = document.getElementById("map-view");
+        const elRelationshipBadge = document.getElementById("relationship-badge");
+        const elNpcStatusText = document.getElementById("npc-status-text");
+        const elNpcAffectionVal = document.getElementById("npc-affection-val");
+
+        // RENDER CURRENT GAME SCENE
+        function renderScene() {
+            // Update Top Bar Header
+            const dayName = daysOfWeek[(gameState.day - 1) % 7];
+            elClockDay.innerText = `Hari ${gameState.day} - ${dayName}`;
+            elClockSeason.innerText = `${seasons[gameState.season]} (${timesOfDay[gameState.timeOfDay]})`;
+            
+            // Icon Time update
+            elTimeIcon.className = gameState.timeOfDay === 3 
+                ? "fa-solid fa-moon text-indigo-400 text-sm md:text-base" 
+                : "fa-solid fa-sun text-amber-400 text-sm md:text-base";
+
+            elStatStamina.innerText = gameState.stamina;
+            elStatMaxStamina.innerText = gameState.maxStamina;
+            elStatCoins.innerText = gameState.coins;
+            elStatCharm.innerText = gameState.charm;
+
+            // Background location
+            const bgUrl = locationBg[gameState.location] || locationBg["home"];
+            elBgLayer.style.backgroundImage = `url('${bgUrl}')`;
+
+            // Dialogue Data
+            const currentDialogue = dialogueTree[gameState.dialogueKey] || dialogueTree["home_welcome"];
+            elSpeakerName.innerText = currentDialogue.speaker;
+            elDialogueText.innerText = currentDialogue.text;
+
+            // NPC Sprite handling
+            if (currentDialogue.npcId && gameState.npcs[currentDialogue.npcId]) {
+                const npc = gameState.npcs[currentDialogue.npcId];
+                elNpcSprite.src = npc.sprite;
+                elNpcSprite.classList.remove("hidden");
+
+                // Badge Relationship Status
+                elRelationshipBadge.classList.remove("hidden");
+                elRelationshipBadge.classList.add("flex");
+                elNpcStatusText.innerText = getRelationshipStatusTitle(npc.affection);
+                elNpcAffectionVal.innerText = npc.affection;
+            } else {
+                elNpcSprite.classList.add("hidden");
+                elRelationshipBadge.classList.add("hidden");
+                elRelationshipBadge.classList.remove("flex");
+            }
+
+            // Render Choices
+            renderChoices(currentDialogue.choices);
+        }
+
+        // RELATIONSHIP STATUS CALCULATOR
+        function getRelationshipStatusTitle(affection) {
+            if (affection >= 100) return "Menikah 💕";
+            if (affection >= 80) return "Tunangan 💍";
+            if (affection >= 60) return "Pacar ❤️";
+            if (affection >= 35) return "Sahabat ✨";
+            if (affection >= 15) return "Teman 😊";
+            return "Kenalan 👋";
+        }
+
+        // RENDER CHOICE BUTTONS
+        function renderChoices(choices) {
+            elChoicesContainer.innerHTML = "";
+            if (!choices || choices.length === 0) {
+                elChoicesContainer.classList.add("hidden");
+                return;
+            }
+
+            elChoicesContainer.classList.remove("hidden");
+            choices.forEach(c => {
+                const btn = document.createElement("button");
+                btn.className = "w-full py-2.5 px-4 glass-card hover:bg-pink-600/80 text-white rounded-xl text-xs sm:text-sm font-bold transition border border-pink-500/30 shadow-lg text-left flex justify-between items-center group";
+                btn.innerHTML = `
+                    <span>${c.text}</span>
+                    <i class="fa-solid fa-chevron-right text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                `;
+
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    handleChoiceAction(c);
+                };
+
+                elChoicesContainer.appendChild(btn);
+            });
+        }
+
+        // CHOICE ACTION HANDLER
+        function handleChoiceAction(choice) {
+            if (choice.action === "open_map") {
+                elMapView.classList.remove("hidden");
+                elMapView.classList.add("flex");
+            } else if (choice.action === "rest_home") {
+                gameState.stamina = Math.min(gameState.maxStamina, gameState.stamina + 15);
+                showToast("Stamina bertambah +15");
+                advanceTime();
+            } else if (choice.action === "study") {
+                if (gameState.stamina < 25) { showToast("Stamina tidak cukup!"); return; }
+                gameState.stamina -= 25;
+                gameState.charm += 1;
+                showToast("Kharisma & Kecerdasan meningkat +1!");
+                advanceTime();
+            } else if (choice.action === "work_cafe") {
+                if (gameState.stamina < 30) { showToast("Stamina tidak cukup!"); return; }
+                gameState.stamina -= 30;
+                gameState.coins += 150;
+                showToast("Mendapatkan gaji +¥150!");
+                advanceTime();
+            } else if (choice.action === "walk_park") {
+                if (gameState.coins < 50) { showToast("Uang tidak cukup!"); return; }
+                gameState.coins -= 50;
+                gameState.stamina = Math.min(gameState.maxStamina, gameState.stamina + 10);
+                showToast("Bersantai di taman (+10 Stamina)");
+                advanceTime();
+            } else if (choice.action === "talk_npc") {
+                gameState.dialogueKey = choice.npcId === "aoi" ? "talk_aoi_start" : "talk_mei_start";
+                renderScene();
+            } else if (choice.action === "chat_npc") {
+                if (gameState.stamina < 10) { showToast("Stamina tidak cukup!"); return; }
+                gameState.stamina -= 10;
+                const npc = gameState.npcs[choice.npcId];
+                npc.affection = Math.min(100, npc.affection + choice.boost);
+                showToast(`Rasa suka ${npc.name} bertambah +${choice.boost}%!`);
+                advanceTime();
+            } else if (choice.action === "give_gift_modal") {
+                openModal("modal-inventory");
+            }
+        }
+
+        // ADVANCE TIME / DAY CYCLE
+        function advanceTime() {
+            gameState.timeOfDay++;
+            if (gameState.timeOfDay > 3) {
+                // Sleep automatically if night ends
+                sleepToNextDay();
+            } else {
+                renderScene();
+                autoSaveCloud();
+            }
+        }
+
+        function sleepToNextDay() {
+            gameState.day++;
+            gameState.timeOfDay = 0; // Pagi
+            gameState.stamina = gameState.maxStamina; // Full restore
+            
+            // Season changes every 30 days
+            if (gameState.day % 30 === 0) {
+                gameState.season = (gameState.season + 1) % 4;
+            }
+
+            gameState.location = "home";
+            gameState.dialogueKey = "home_welcome";
+            showToast(`Hari ke-${gameState.day} dimulai! Stamina pulih sepenuhnya.`);
+            renderScene();
+            autoSaveCloud();
+        }
+
+        // MAP NAVIGATION
+        document.querySelectorAll(".loc-card").forEach(card => {
+            card.onclick = () => {
+                const loc = card.dataset.location;
+                gameState.location = loc;
+                elMapView.classList.add("hidden");
+                elMapView.classList.remove("flex");
+
+                // Set initial dialogue for location
+                if (loc === "home") gameState.dialogueKey = "home_welcome";
+                else if (loc === "school") gameState.dialogueKey = "school_study";
+                else if (loc === "cafe") gameState.dialogueKey = "cafe_visit";
+                else if (loc === "park") gameState.dialogueKey = "park_visit";
+                else gameState.dialogueKey = "home_welcome";
+
+                renderScene();
+            };
+        });
+
+        document.getElementById("btn-map").onclick = () => {
+            elMapView.classList.remove("hidden");
+            elMapView.classList.add("flex");
+        };
+        document.getElementById("btn-close-map").onclick = () => {
+            elMapView.classList.add("hidden");
+            elMapView.classList.remove("flex");
+        };
+        document.getElementById("btn-sleep").onclick = () => {
+            sleepToNextDay();
+        };
+
+        // INVENTORY & SHOP MODAL
+        function renderInventoryTab(mode) {
+            const container = document.getElementById("inventory-content");
+            container.innerHTML = "";
+
+            if (mode === "owned") {
+                Object.keys(itemsDB).forEach(key => {
+                    const count = gameState.inventory[key] || 0;
+                    const item = itemsDB[key];
+
+                    const card = document.createElement("div");
+                    card.className = "glass-card p-3 rounded-xl flex flex-col justify-between border border-slate-700/80";
+                    card.innerHTML = `
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <i class="fa-solid ${item.icon} text-pink-400 text-lg"></i>
+                                <div class="font-bold text-xs text-white">${item.name}</div>
+                            </div>
+                            <p class="text-[10px] text-slate-400 mb-2">${item.desc}</p>
+                            <div class="text-[11px] font-bold text-slate-300">Dimiliki: ${count}</div>
+                        </div>
+                        <button class="btn-give w-full mt-2 py-1 bg-pink-600 hover:bg-pink-500 rounded-lg text-xs font-bold transition ${count <= 0 ? 'opacity-40 cursor-not-allowed' : ''}">
+                            Berikan Hadiah (+${item.boost}%)
+                        </button>
+                    `;
+
+                    card.querySelector(".btn-give").onclick = () => {
+                        if (count > 0 && gameState.dialogueKey.startsWith("talk_")) {
+                            const npcId = gameState.dialogueKey.includes("aoi") ? "aoi" : "mei";
+                            const npc = gameState.npcs[npcId];
+                            
+                            gameState.inventory[key]--;
+                            let boost = item.boost;
+                            if (npc.favoriteItem === key) boost += 15; // Bonus favorite
+
+                            npc.affection = Math.min(100, npc.affection + boost);
+                            showToast(`Memberikan ${item.name}! Suka ${npc.name} +${boost}%`);
+                            renderInventoryTab("owned");
+                            renderScene();
+                            autoSaveCloud();
+                        } else if (!gameState.dialogueKey.startsWith("talk_")) {
+                            showToast("Bicaralah dengan gadis terlebih dahulu!");
+                        }
+                    };
+
+                    container.appendChild(card);
+                });
+            } else {
+                // SHOP TAB
+                Object.keys(itemsDB).forEach(key => {
+                    const item = itemsDB[key];
+                    const card = document.createElement("div");
+                    card.className = "glass-card p-3 rounded-xl flex flex-col justify-between border border-slate-700/80";
+                    card.innerHTML = `
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <i class="fa-solid ${item.icon} text-amber-400 text-lg"></i>
+                                <div class="font-bold text-xs text-white">${item.name}</div>
+                            </div>
+                            <p class="text-[10px] text-slate-400 mb-2">${item.desc}</p>
+                            <div class="text-[11px] font-bold text-amber-300">Harga: ¥${item.price}</div>
+                        </div>
+                        <button class="btn-buy w-full mt-2 py-1 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-xs font-bold transition">
+                            Beli Barang
+                        </button>
+                    `;
+
+                    card.querySelector(".btn-buy").onclick = () => {
+                        if (gameState.coins >= item.price) {
+                            gameState.coins -= item.price;
+                            gameState.inventory[key] = (gameState.inventory[key] || 0) + 1;
+                            showToast(`Berhasil membeli ${item.name}!`);
+                            renderInventoryTab("shop");
+                            renderScene();
+                            autoSaveCloud();
+                        } else {
+                            showToast("Uang tidak mencukupi!");
+                        }
+                    };
+
+                    container.appendChild(card);
+                });
+            }
+        }
+
+        document.getElementById("tab-inv-owned").onclick = () => {
+            document.getElementById("tab-inv-owned").className = "text-pink-400 font-bold border-b-2 border-pink-500 pb-1 text-sm";
+            document.getElementById("tab-inv-shop").className = "text-slate-400 font-semibold hover:text-slate-200 pb-1 text-sm";
+            renderInventoryTab("owned");
+        };
+        document.getElementById("tab-inv-shop").onclick = () => {
+            document.getElementById("tab-inv-shop").className = "text-pink-400 font-bold border-b-2 border-pink-500 pb-1 text-sm";
+            document.getElementById("tab-inv-owned").className = "text-slate-400 font-semibold hover:text-slate-200 pb-1 text-sm";
+            renderInventoryTab("shop");
+        };
+
+        // RELATIONSHIPS OVERVIEW MODAL
+        function renderRelationshipsModal() {
+            const container = document.getElementById("npc-list-container");
+            container.innerHTML = "";
+
+            Object.keys(gameState.npcs).forEach(key => {
+                const npc = gameState.npcs[key];
+                const card = document.createElement("div");
+                card.className = "glass-card p-3 rounded-xl flex items-center gap-3 border border-slate-700/80";
+                card.innerHTML = `
+                    <img src="${npc.sprite}" class="w-14 h-14 object-contain bg-slate-800/80 rounded-xl border border-slate-700 p-1">
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center">
+                            <h4 class="font-bold text-sm text-pink-300 font-header">${npc.name}</h4>
+                            <span class="text-[10px] text-pink-400 font-bold bg-pink-950/80 px-2 py-0.5 rounded-full border border-pink-500/30">
+                                ${getRelationshipStatusTitle(npc.affection)}
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mb-1">${npc.role}</p>
+                        <!-- Progress Bar -->
+                        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-700">
+                            <div class="bg-gradient-to-r from-pink-500 to-purple-500 h-full transition-all duration-500" style="width: ${npc.affection}%"></div>
+                        </div>
+                        <div class="text-[10px] text-slate-400 text-right mt-0.5">${npc.affection}% Affection</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // NAV BAR EVENT LISTENERS
+        document.getElementById("nav-btn-story").onclick = () => {
+            closeAllModals();
+        };
+        document.getElementById("nav-btn-relationships").onclick = () => {
+            renderRelationshipsModal();
+            openModal("modal-relationships");
+        };
+        document.getElementById("btn-inventory-modal").onclick = () => {
+            renderInventoryTab("owned");
+            openModal("modal-inventory");
+        };
+        document.getElementById("nav-btn-jobs").onclick = () => {
+            elMapView.classList.remove("hidden");
+            elMapView.classList.add("flex");
+        };
+        document.getElementById("nav-btn-account").onclick = () => {
+            openModal("modal-auth");
+        };
+
+        // MODAL HELPERS
+        function openModal(id) { document.getElementById(id).classList.remove("hidden"); }
+        function closeModal(id) { document.getElementById(id).classList.add("hidden"); }
+        function closeAllModals() {
+            document.querySelectorAll(".fixed").forEach(m => m.classList.add("hidden"));
+        }
+        document.querySelectorAll(".close-modal").forEach(btn => {
+            btn.onclick = () => closeAllModals();
+        });
+
+        // TOAST NOTIFICATIONS
+        function showToast(msg) {
+            const toast = document.getElementById("toast");
+            document.getElementById("toast-text").innerText = msg;
+            toast.classList.remove("hidden");
+            setTimeout(() => toast.classList.add("hidden"), 3000);
+        }
+
+        // FIREBASE CLOUD SAVE / LOAD SYSTEM
+        async function autoSaveCloud() {
+            if (!currentUser) return;
+            const cloudIcon = document.getElementById("cloud-icon");
+            const cloudText = document.getElementById("cloud-text");
+
+            cloudIcon.className = "fa-solid fa-spinner fa-spin text-amber-400";
+            cloudText.innerText = "Menyimpan...";
+
+            try {
+                // Strict Firestore path: /artifacts/{appId}/users/{userId}/{collectionName}
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'saves', 'latest');
+                await setDoc(docRef, {
+                    gameState,
+                    savedAt: new Date().toISOString()
+                }, { merge: true });
+
+                cloudIcon.className = "fa-solid fa-cloud-check text-emerald-400";
+                cloudText.innerText = "Tersimpan";
+            } catch (err) {
+                console.error("Gagal simpan cloud:", err);
+                cloudIcon.className = "fa-solid fa-cloud-xmark text-rose-400";
+                cloudText.innerText = "Gagal Simpan";
+            }
+        }
+
+        async function loadCloudSave() {
+            if (!currentUser) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'saves', 'latest');
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists() && docSnap.data().gameState) {
+                    gameState = docSnap.data().gameState;
+                    showToast("Progres game berhasil dimuat dari Firebase!");
+                    renderScene();
+                } else {
+                    showToast("Belum ada data simpanan di Cloud.");
+                }
+            } catch (err) {
+                console.error("Gagal muat data:", err);
+                showToast("Gagal memuat dari Cloud.");
+            }
+        }
+
+        // AUTH LISTENERS & ACTIONS
+        onAuthStateChanged(auth, async (user) => {
+            currentUser = user;
+            const loggedInState = document.getElementById("auth-state-loggedin");
+            const loggedOutState = document.getElementById("auth-state-loggedout");
+
+            if (user) {
+                loggedInState.classList.remove("hidden");
+                loggedInState.classList.add("flex");
+                loggedOutState.classList.add("hidden");
+
+                document.getElementById("user-display-email").innerText = user.isAnonymous ? "Mode Guest / Tamu" : user.email;
+                document.getElementById("user-display-uid").innerText = `UID: ${user.uid}`;
+
+                await loadCloudSave();
+            } else {
+                loggedInState.classList.add("hidden");
+                loggedOutState.classList.remove("hidden");
+                loggedOutState.classList.add("flex");
+            }
+        });
+
+        // Initialize App & Auth Token logic
+        window.addEventListener("DOMContentLoaded", async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (e) {
+                console.warn("Auth token fallback to anonymous", e);
+                await signInAnonymously(auth);
+            }
+            renderScene();
+        });
+
+        // Auth Form Handlers
+        document.getElementById("btn-auth-signin").onclick = async () => {
+            const email = document.getElementById("input-auth-email").value;
+            const pass = document.getElementById("input-auth-pass").value;
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                showToast("Berhasil Masuk!");
+                closeModal("modal-auth");
+            } catch (e) {
+                showToast("Gagal Masuk: " + e.message);
+            }
+        };
+
+        document.getElementById("btn-auth-signup").onclick = async () => {
+            const email = document.getElementById("input-auth-email").value;
+            const pass = document.getElementById("input-auth-pass").value;
+            try {
+                await createUserWithEmailAndPassword(auth, email, pass);
+                showToast("Akun Berhasil Dibuat!");
+                closeModal("modal-auth");
+            } catch (e) {
+                showToast("Gagal Daftar: " + e.message);
+            }
+        };
+
+        document.getElementById("btn-auth-guest").onclick = async () => {
+            try {
+                await signInAnonymously(auth);
+                showToast("Masuk Mode Guest");
+                closeModal("modal-auth");
+            } catch (e) {
+                showToast("Gagal masuk Guest");
+            }
+        };
+
+        document.getElementById("btn-logout").onclick = async () => {
+            await signOut(auth);
+            showToast("Berhasil Keluar");
+        };
+
+        document.getElementById("btn-save-cloud").onclick = async () => {
+            await autoSaveCloud();
+            showToast("Game Berhasil Disimpan di Cloud!");
+        };
+
+        document.getElementById("btn-load-cloud").onclick = async () => {
+            await loadCloudSave();
+        };
+
+        document.getElementById("btn-auth-status").onclick = () => {
+            openModal("modal-auth");
+        };
+    </script>
 </body>
 </html>
