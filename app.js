@@ -13,8 +13,8 @@ const firebaseConfig = {
 };
 
 // Gemini API Key Kamu
-const GEMINI_API_KEY = "AQ.Ab8RN6IGr1pG8gT8XxVpCpN2cZNw6MJ4xczJW3EWsad62cngFg";
-const MODEL_NAME = "gemini-2.5-flash";
+const GEMINI_API_KEY = "AQ.Ab8RN6KX48K6dftD18Wez4EU72SIK431voXNdy8jPyOfqdbViw";
+const MODEL_NAME = "gemini-3.6-flash";
 
 // Inisialisasi Firebase
 const app = initializeApp(firebaseConfig);
