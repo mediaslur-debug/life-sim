@@ -1,9 +1,8 @@
-// Import fungsi Firebase SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// Konfigurasi langsung di sini
+// Konfigurasi Firebase Kamu
 const firebaseConfig = {
   apiKey: "AIzaSyBO5EgKM0er9tXOql_mMFXyWm0GgWGqA7Q",
   authDomain: "life-sim-37cf9.firebaseapp.com",
@@ -13,6 +12,7 @@ const firebaseConfig = {
   appId: "1:807477304749:web:77493cca0b32ad73299524"
 };
 
+// Gemini API Key Kamu
 const GEMINI_API_KEY = "AQ.Ab8RN6IGr1pG8gT8XxVpCpN2cZNw6MJ4xczJW3EWsad62cngFg";
 const MODEL_NAME = "gemini-2.5-flash";
 
@@ -35,48 +35,54 @@ const elOptions = document.getElementById("options-container");
 const elLoading = document.getElementById("loading-indicator");
 const elUserStatus = document.getElementById("user-status");
 
-// Autentikasi Pengguna
+// Autentikasi Anonymous Otomatis
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     currentUser = user;
-    elUserStatus.innerText = `ID: ${user.uid.slice(0, 6)}...`;
+    elUserStatus.innerText = `ID: ${user.uid.slice(0, 5)}...`;
     await muatAtauBuatKarakter(user.uid);
   } else {
-    signInAnonymously(auth).catch((err) => console.error("Gagal Login:", err));
+    signInAnonymously(auth).catch((err) => {
+      console.error("Gagal Login Anonymous:", err);
+      elUserStatus.innerText = "Gagal Login";
+    });
   }
 });
 
-// Memuat data pemain dari Firestore atau membuat baru jika belum ada
 async function muatAtauBuatKarakter(uid) {
-  const userRef = doc(db, "users", uid);
-  const docSnap = await getDoc(userRef);
+  try {
+    const userRef = doc(db, "users", uid);
+    const docSnap = await getDoc(userRef);
 
-  if (docSnap.exists()) {
-    characterData = docSnap.data();
+    if (docSnap.exists()) {
+      characterData = docSnap.data();
+    } else {
+      characterData = {
+        nama: "Rian",
+        umur: 20,
+        uang: 500,
+        energi: 100,
+        stres: 10,
+        ceritaTerakhir: "Kamu baru saja menginjak usia 20 tahun dan memutuskan hidup mandiri di kota besar dengan modal pas-pasan. Langkah apa yang mau kamu ambil pertama kali?",
+        opsiTerakhir: [
+          "Mencari pekerjaan serabutan di kafe demi menyambung hidup",
+          "Mencoba peruntungan melamar kerja kantoran",
+          "Santai dulu dan keliling kota mencari kenalan baru"
+        ],
+        memoryLog: ["Memulai kehidupan mandiri di kota besar pada usia 20 tahun."]
+      };
+      await setDoc(userRef, characterData);
+    }
     updateUI();
     tampilkanCeritaTerakhir();
-  } else {
-    characterData = {
-      nama: "Rian",
-      umur: 20,
-      uang: 500,
-      energi: 100,
-      stres: 10,
-      ceritaTerakhir: "Kamu baru saja lulus dan pindah ke kota besar dengan tabungan seadanya. Apa langkah pertamamu?",
-      opsiTerakhir: [
-        "Mencari pekerjaan paruh waktu di kafe lokal",
-        "Mendaftar wawancara kerja di perusahaan IT",
-        "Jalan-jalan mengeksplorasi kota"
-      ],
-      memoryLog: ["Pindah ke kota besar pada umur 20 tahun."]
-    };
-    await setDoc(userRef, characterData);
-    updateUI();
-    tampilkanCeritaTerakhir();
+  } catch (err) {
+    console.error("Gagal memuat database:", err);
+    elStory.innerText = "Gagal memuat data game dari Firebase. Periksa koneksi atau izin database.";
   }
 }
 
 function updateUI() {
+  if (!characterData) return;
   elNama.innerText = characterData.nama;
   elUmur.innerText = characterData.umur;
   elUang.innerText = `$${characterData.uang}`;
@@ -85,12 +91,14 @@ function updateUI() {
 }
 
 function tampilkanCeritaTerakhir() {
+  if (!characterData) return;
   elStory.innerText = characterData.ceritaTerakhir;
   buatTombolOpsi(characterData.opsiTerakhir);
 }
 
 function buatTombolOpsi(opsiArray) {
   elOptions.innerHTML = "";
+  if (!opsiArray) return;
   opsiArray.forEach((opsi) => {
     const btn = document.createElement("button");
     btn.className = "btn-option";
@@ -100,7 +108,6 @@ function buatTombolOpsi(opsiArray) {
   });
 }
 
-// Mengirim aksi pilihan ke Gemini AI
 async function prosesPilihan(pilihan) {
   tampilkanLoading(true);
 
@@ -121,11 +128,11 @@ async function prosesPilihan(pilihan) {
 
   Tugasmu:
   1. Tuliskan kelanjutan narasi cerita yang menarik dan realistis berdasarkan pilihan tersebut (2-4 kalimat).
-  2. Tentukan perubahan status karakter (uang, energi, stres, umur bertambah jika perlu).
-  3. Berikan 3 opsi aksi baru untuk giliran berikutnya.
-  4. Berikan 1 kalimat ringkasan singkat dari kejadian ini untuk dimasukkan ke memori jangka panjang jika ada kejadian penting.
+  2. Tentukan perubahan status karakter (uang bisa bertambah/berkurang, energi naik/turun, stres naik/turun, umur bisa bertambah jika waktunya lewat).
+  3. Berikan 3 opsi aksi baru yang relevan untuk kelanjutan cerita berikutnya.
+  4. Berikan 1 kalimat ringkasan singkat dari kejadian ini untuk dimasukkan ke memori jangka panjang.
 
-  Balas HARUS dalam format JSON murni tanpa markdown/format teks lain:
+  Balas HARUS dalam format JSON murni TANPA blok markdown code (seperti \`\`\`json):
   {
     "narasi": "Teks cerita...",
     "perubahan": {
@@ -135,7 +142,7 @@ async function prosesPilihan(pilihan) {
       "tambahUmur": 0
     },
     "opsiBaru": ["Opsi 1", "Opsi 2", "Opsi 3"],
-    "memoriBaru": "Poin memori jika penting atau kosongkan jika biasa saja"
+    "memoriBaru": "Poin memori penting..."
   }
   `;
 
@@ -149,11 +156,17 @@ async function prosesPilihan(pilihan) {
     });
 
     const data = await response.json();
+    if (!data.candidates || data.candidates.length === 0) {
+      throw new Error("Respons AI kosong.");
+    }
+
     let text = data.candidates[0].content.parts[0].text;
+    // Bersihkan format markdown jika AI tidak sengaja menyсерtakannya
     text = text.replace(/```json/g, "").replace(/```/g, "").trim();
 
     const hasil = JSON.parse(text);
 
+    // Update data lokal
     characterData.uang += hasil.perubahan.uang || 0;
     characterData.energi = Math.max(0, Math.min(100, characterData.energi + (hasil.perubahan.energi || 0)));
     characterData.stres = Math.max(0, Math.min(100, characterData.stres + (hasil.perubahan.stres || 0)));
@@ -162,13 +175,14 @@ async function prosesPilihan(pilihan) {
     characterData.ceritaTerakhir = hasil.narasi;
     characterData.opsiTerakhir = hasil.opsiBaru;
 
-    if (hasil.memoriBaru && hasil.memoriBaru.length > 0) {
+    if (hasil.memoriBaru) {
       characterData.memoryLog.push(hasil.memoriBaru);
-      if (characterData.memoryLog.length > 10) {
+      if (characterData.memoryLog.length > 15) {
         characterData.memoryLog.shift();
       }
     }
 
+    // Simpan ke Firebase Firestore
     const userRef = doc(db, "users", currentUser.uid);
     await setDoc(userRef, characterData);
 
@@ -176,8 +190,8 @@ async function prosesPilihan(pilihan) {
     tampilkanCeritaTerakhir();
 
   } catch (err) {
-    console.error("Gagal memproses AI:", err);
-    alert("Terjadi masalah saat terhubung ke AI. Coba lagi.");
+    console.error("Gagal memproses AI/Database:", err);
+    alert("Terjadi kesalahan saat memproses pilihan dengan AI. Coba klik tombol opsi sekali lagi.");
   } finally {
     tampilkanLoading(false);
   }
