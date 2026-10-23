@@ -1,813 +1,795 @@
-<!-- ... existing code ... -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sakura Chronicles: Eternal Hearts</title>
+    <!-- Firebase SDK (Version 9 Compatibility) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <style>
-        body {
-            font-family: 'Nunito', sans-serif;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
             user-select: none;
-            -webkit-user-select: none;
-        }
-        .font-header {
-            font-family: 'Fredoka', cursive;
-        }
-        /* Custom scrollbars */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.6);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(244, 114, 182, 0.5);
-            border-radius: 9999px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(244, 114, 182, 0.8);
-        }
-        
-        /* Glassmorphism styles */
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-        }
-        .glass-card {
-            background: rgba(30, 41, 59, 0.75);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* Animations */
-        .fade-in {
-            animation: fadeIn 0.3s ease-in-out forwards;
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        #game-container {
+            width: 100%;
+            max-width: 900px;
+            height: 650px;
+            background: linear-gradient(135deg, #1e1b4b, #311042);
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
         }
-        .pulse-subtle {
-            animation: pulseSubtle 2s infinite;
+
+        /* Top Bar Navigation & Stats */
+        #top-bar {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            z-index: 10;
         }
-        @keyframes pulseSubtle {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+
+        .stat-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .stat-badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Main View Areas */
+        #main-viewport {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Auth Overlay */
+        #auth-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.95);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .auth-card {
+            background: rgba(30, 41, 59, 0.9);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .auth-card h2 {
+            margin-bottom: 10px;
+            color: #ec4899;
+        }
+
+        .auth-card p {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: #cbd5e1;
+            margin-bottom: 5px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(15, 23, 42, 0.6);
+            color: white;
+            outline: none;
+        }
+
+        /* Map View */
+        #map-view {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            overflow-y: auto;
+            height: 100%;
+        }
+
+        .location-card {
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .location-card:hover {
+            transform: translateY(-3px);
+            background: rgba(51, 65, 85, 0.9);
+            border-color: #ec4899;
+        }
+
+        .location-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #f472b6;
+            margin-bottom: 5px;
+        }
+
+        .location-desc {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 15px;
+        }
+
+        /* Visual Novel Scene */
+        #vn-view {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .character-sprite-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 10px;
+        }
+
+        .character-portrait {
+            width: 220px;
+            height: 280px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 2px solid rgba(255,255,255,0.2);
+            background: #1e293b;
+        }
+
+        .character-portrait svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Dialogue Box */
+        #dialogue-box {
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(10px);
+            border-top: 2px solid #ec4899;
+            padding: 20px;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .speaker-name {
+            font-weight: 700;
+            color: #f472b6;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .dialogue-text {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #e2e8f0;
+            margin-bottom: 15px;
+        }
+
+        .options-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(135deg, #ec4899, #be185d);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Tab Bar */
+        #tab-bar {
+            background: rgba(15, 23, 42, 0.95);
+            display: flex;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85rem;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-btn.active {
+            color: #f472b6;
+            border-bottom-color: #f472b6;
+            background: rgba(236, 72, 153, 0.05);
+        }
+
+        /* General Inventory & Status Modal */
+        .modal {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.95);
+            z-index: 40;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #f472b6;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
         }
     </style>
 </head>
-<!-- ... existing code ... -->
-        <!-- CENTER CONTENT DISPLAY (DYNAMIC VISUAL NOVEL OR MAP VIEW) -->
-        <div id="main-viewport" class="relative z-10 flex-1 flex flex-col justify-between p-2 md:p-4 overflow-hidden">
-            
-            <!-- REALISTIC SPRITE DISPLAY LAYER -->
-            <div id="sprite-layer" class="flex-1 flex items-end justify-center relative pointer-events-none transition-all duration-500">
-                <div id="npc-sprite-container" class="relative h-[80%] sm:h-[90%] max-h-[580px] w-[320px] sm:w-[400px] hidden flex justify-center items-end">
-                    <img id="npc-sprite" 
-                         src="" 
-                         alt="Wanita Cantik" 
-                         class="h-full w-full object-cover rounded-t-3xl border-2 border-pink-400/40 shadow-[0_10px_35px_rgba(244,114,182,0.3)] transition-all duration-300 pointer-events-auto">
-                    <div class="absolute inset-0 rounded-t-3xl bg-gradient-to-t from-slate-950 via-transparent to-transparent pointer-events-none"></div>
+<body>
+
+<div id="game-container">
+    <!-- Top Bar -->
+    <div id="top-bar">
+        <div class="stat-group">
+            <div class="stat-badge">📅 <span id="time-display">Hari 1 - Pagi</span></div>
+            <div class="stat-badge">⚡ <span id="energy-display">100/100</span></div>
+            <div class="stat-badge">💰 <span id="money-display">500</span> Koin</div>
+        </div>
+        <button class="btn btn-secondary" onclick="saveGameToCloud()">💾 Simpan Game</button>
+    </div>
+
+    <!-- Main Viewport -->
+    <div id="main-viewport">
+
+        <!-- Auth / Login Overlay -->
+        <div id="auth-overlay">
+            <div class="auth-card">
+                <h2>Sakura Chronicles</h2>
+                <p>Simulasi Kencan & Kehidupan Berkelanjutan Online</p>
+                <div class="input-group">
+                    <label>Email ID Progres</label>
+                    <input type="email" id="auth-email" placeholder="nama@email.com">
+                </div>
+                <div class="input-group">
+                    <label>Kata Sandi</label>
+                    <input type="password" id="auth-password" placeholder="••••••••">
+                </div>
+                <button class="btn" style="width: 100%; margin-bottom: 10px;" onclick="handleLogin()">Masuk / Daftar</button>
+                <button class="btn btn-secondary" style="width: 100%;" onclick="startGuestSession()">Main Tanpa Akun (Tamu)</button>
+            </div>
+        </div>
+
+        <!-- Map View -->
+        <div id="map-view">
+            <div class="location-card" onclick="visitLocation('home')">
+                <div>
+                    <div class="location-title">🏠 Apartemen Mewah</div>
+                    <div class="location-desc">Tempat tinggalmu. Istirahat untuk memulihkan stamina harian.</div>
+                </div>
+                <button class="btn btn-secondary">Pulang & Istirahat</button>
+            </div>
+
+            <div class="location-card" onclick="visitLocation('campus')">
+                <div>
+                    <div class="location-title">🎓 Kampus Seni Sakura</div>
+                    <div class="location-desc">Tempat belajar & bertemu Aoi, mahasiswa seni berprestasi.</div>
+                </div>
+                <button class="btn">Kunjungi (-20 Stamina)</button>
+            </div>
+
+            <div class="location-card" onclick="visitLocation('cafe')">
+                <div>
+                    <div class="location-title">☕ Kafe Estetik "Lumiere"</div>
+                    <div class="location-desc">Kafe berkelas tempat Mei bekerja sebagai barista manis. Kafe ini juga membuka lowongan kerja.</div>
+                </div>
+                <button class="btn">Kunjungi / Bekerja</button>
+            </div>
+
+            <div class="location-card" onclick="visitLocation('mall')">
+                <div>
+                    <div class="location-title">🛍️ Butik Mode & Hadiah</div>
+                    <div class="location-desc">Beli berbagai hadiah mewah untuk memikat hati para wanita.</div>
+                </div>
+                <button class="btn btn-secondary">Belanja</button>
+            </div>
+
+            <div class="location-card" onclick="visitLocation('lounge')">
+                <div>
+                    <div class="location-title">🍸 Lounge VIP Nightclub</div>
+                    <div class="location-desc">Tempat elegan bertemu Rina, sang model papan atas.</div>
+                </div>
+                <button class="btn">Kunjungi (-25 Stamina)</button>
+            </div>
+
+            <div class="location-card" onclick="visitLocation('park')">
+                <div>
+                    <div class="location-title">🌸 Taman Bunga Sakura</div>
+                    <div class="location-desc">Lokasi paling romantis untuk berkencan dan jalan-jalan santai.</div>
+                </div>
+                <button class="btn">Jalan-Jalan (-15 Stamina)</button>
+            </div>
+        </div>
+
+        <!-- Visual Novel Interactive View -->
+        <div id="vn-view">
+            <div class="character-sprite-container">
+                <div class="character-portrait" id="character-svg-container">
+                    <!-- Dynamic Vector Avatar SVG -->
                 </div>
             </div>
 
-            <!-- MAP SELECTION OVERLAY -->
-            <div id="map-view" class="hidden inset-0 absolute z-30 p-4 md:p-8 glass-panel m-2 md:m-4 rounded-2xl flex-col fade-in overflow-y-auto">
-                <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
-                    <h2 class="text-xl font-bold font-header text-amber-300 flex items-center gap-2">
-                        <i class="fa-solid fa-compass"></i> Peta Kota Sakura
-                    </h2>
-                    <button id="btn-close-map" class="text-slate-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+            <div id="dialogue-box">
+                <div>
+                    <div class="speaker-name" id="speaker-name">Nama Karakter</div>
+                    <div class="dialogue-text" id="dialogue-text">Teks perkataan dialog akan muncul di sini secara interaktif...</div>
                 </div>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 flex-1">
-                    <!-- Home -->
-                    <div data-location="home" class="loc-card glass-card hover:border-pink-500 p-4 rounded-2xl cursor-pointer transition flex flex-col justify-between group">
-                        <div>
-                            <div class="text-pink-400 font-bold text-base md:text-lg mb-1 flex items-center gap-2">
-                                <i class="fa-solid fa-house"></i> Apartemen Mewah
-                            </div>
-                            <p class="text-xs text-slate-300">Tempat tinggalmu. Pulihkan stamina dan energi harian.</p>
-                        </div>
-                        <span class="text-[11px] font-semibold text-emerald-400 mt-3 group-hover:translate-x-1 transition-transform inline-block">Pulang &rarr;</span>
-                    </div>
-
-                    <!-- School / University -->
-                    <div data-location="school" class="loc-card glass-card hover:border-indigo-500 p-4 rounded-2xl cursor-pointer transition flex flex-col justify-between group">
-                        <div>
-                            <div class="text-indigo-400 font-bold text-base md:text-lg mb-1 flex items-center gap-2">
-                                <i class="fa-solid fa-graduation-cap"></i> Kampus Seni Sakura
-                            </div>
-                            <p class="text-xs text-slate-300">Tempat belajar & bertemu Aoi, sang mahasiswi berprestasi.</p>
-                        </div>
-                        <div class="flex justify-between items-center mt-3">
-                            <span class="text-[10px] text-amber-300 font-bold">-20 Stamina</span>
-                            <span class="text-[11px] font-semibold text-emerald-400 group-hover:translate-x-1 transition-transform">Kunjungi &rarr;</span>
-                        </div>
-                    </div>
-
-                    <!-- Cafe -->
-                    <div data-location="cafe" class="loc-card glass-card hover:border-amber-500 p-4 rounded-2xl cursor-pointer transition flex flex-col justify-between group">
-                        <div>
-                            <div class="text-amber-400 font-bold text-base md:text-lg mb-1 flex items-center gap-2">
-                                <i class="fa-solid fa-mug-saucer"></i> Kafe Estetik "Lumiere"
-                            </div>
-                            <p class="text-xs text-slate-300">Kafe berkelas tempat Mei bekerja sebagai barista manis.</p>
-                        </div>
-                        <div class="flex justify-between items-center mt-3">
-                            <span class="text-[10px] text-emerald-300 font-bold">+200 Koin (Kerja)</span>
-                            <span class="text-[11px] font-semibold text-emerald-400 group-hover:translate-x-1 transition-transform">Kunjungi &rarr;</span>
-                        </div>
-                    </div>
-
-                    <!-- Fashion Boutique -->
-                    <div data-location="mall" class="loc-card glass-card hover:border-purple-500 p-4 rounded-2xl cursor-pointer transition flex flex-col justify-between group">
-                        <div>
-                            <div class="text-purple-400 font-bold text-base md:text-lg mb-1 flex items-center gap-2">
-                                <i class="fa-solid fa-gem"></i> Butik Mode & Hadiah
-                            </div>
-                            <p class="text-xs text-slate-300">Beli hadiah mewah untuk memikat para wanita cantik.</p>
-                        </div>
-                        <span class="text-[11px] font-semibold text-emerald-400 mt-3 group-hover:translate-x-1 transition-transform inline-block">Belanja &rarr;</span>
-                    </div>
-
-                    <!-- Luxury Lounge -->
-                    <div data-location="lounge" class="loc-card glass-card hover:border-rose-500 p-4 rounded-2xl cursor-pointer transition flex flex-col justify-between group">
-                        <div>
-                            <div class="text-rose-400 font-bold text-base md:text-lg mb-1 flex items-center gap-2">
-                                <i class="fa-solid fa-wine-glass"></i> Lounge VIP Nightclub
-                            </div>
-                            <p class="text-xs text-slate-300">Tempat elegan bertemu Rina, sang model papan atas.</p>
-                        </div>
-                        <div class="flex justify-between items-center mt-3">
-                            <span class="text-[10px] text-amber-300 font-bold">-25 Stamina</span>
-                            <span class="text-[11px] font-semibold text-emerald-400 group-hover:translate-x-1 transition-transform">Masuk &rarr;</span>
-                        </div>
-                    </div>
-
-                    <!-- Central Park -->
-                    <div data-location="park" class="loc-card glass-card hover:border-emerald-500 p-4 rounded-2xl cursor-pointer transition flex flex-col justify-between group">
-                        <div>
-                            <div class="text-emerald-400 font-bold text-base md:text-lg mb-1 flex items-center gap-2">
-                                <i class="fa-solid fa-tree"></i> Taman Bunga Sakura
-                            </div>
-                            <p class="text-xs text-slate-300">Lokasi paling romantis untuk berkencan dan jalan-jalan.</p>
-                        </div>
-                        <div class="flex justify-between items-center mt-3">
-                            <span class="text-[10px] text-amber-300 font-bold">-15 Stamina</span>
-                            <span class="text-[11px] font-semibold text-emerald-400 group-hover:translate-x-1 transition-transform">Kunjungi &rarr;</span>
-                        </div>
-                    </div>
+                <div class="options-container" id="options-container">
+                    <!-- Interactive choice buttons -->
                 </div>
             </div>
-<!-- ... existing code ... -->
-    <!-- FIREBASE MODULE & GAME ENGINE -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        </div>
 
-        // Global Firebase Configuration
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : {
-                apiKey: "AIzaSyDemoConfigForDatingSimGame12345",
-                authDomain: "dating-sim-demo.firebaseapp.com",
-                projectId: "dating-sim-demo",
-                storageBucket: "dating-sim-demo.appspot.com",
-                messagingSenderId: "1234567890",
-                appId: "1:1234567890:web:demo12345"
-            };
+        <!-- Character Status / Relationships Modal -->
+        <div id="status-modal" class="modal">
+            <div class="modal-title">Hubungan & Kasih Sayang</div>
+            <div id="relationships-list"></div>
+            <button class="btn btn-secondary" style="margin-top: 15px;" onclick="toggleModal('status-modal')">Tutup</button>
+        </div>
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'dating-sim-game';
+        <!-- Inventory Modal -->
+        <div id="inventory-modal" class="modal">
+            <div class="modal-title">Tas / Inventoris Hadiah</div>
+            <div id="inventory-list"></div>
+            <button class="btn btn-secondary" style="margin-top: 15px;" onclick="toggleModal('inventory-modal')">Tutup</button>
+        </div>
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    </div>
 
-        let currentUser = null;
-        let gameState = {
-            day: 1,
-            timeOfDay: 0, // 0: Pagi, 1: Siang, 2: Sore, 3: Malam
-            season: 0,    // 0: Semi, 1: Panas, 2: Gugur, 3: Dingin
-            stamina: 100,
-            maxStamina: 100,
-            coins: 800,
-            charm: 1,
-            location: "home",
-            currentNpcId: null,
-            dialogueKey: "home_welcome",
-            dialogueIndex: 0,
-            inventory: {
-                boba: 2,
-                chocolate: 1,
-                flowers: 1,
-                ring: 0
-            },
-            // KARAKTER WANITA REALSISTIS, CANTIK & ELEGAN
-            npcs: {
-                aoi: {
-                    name: "Aoi Kirishima",
-                    role: "Mahasiswi Pintar & Elegan",
-                    affection: 20,
-                    status: "Kenalan",
-                    favoriteItem: "boba",
-                    // Foto Realistis Unsplash (Gadis Asia Cantik & Anggun)
-                    sprite: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800&auto=format&fit=crop"
-                },
-                mei: {
-                    name: "Mei Tachibana",
-                    role: "Barista Manis & Seksi",
-                    affection: 15,
-                    status: "Kenalan",
-                    favoriteItem: "chocolate",
-                    // Foto Realistis Unsplash (Gadis Imut & Memikat)
-                    sprite: "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=800&auto=format&fit=crop"
-                },
-                rina: {
-                    name: "Rina Takahashi",
-                    role: "Model Fashion & Glamor",
-                    affection: 10,
-                    status: "Kenalan",
-                    favoriteItem: "flowers",
-                    // Foto Realistis Unsplash (Wanita Seksi & Modis)
-                    sprite: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800&auto=format&fit=crop"
-                },
-                evelyn: {
-                    name: "Evelyn Vance",
-                    role: "Pengusaha Wanita Sukses",
-                    affection: 5,
-                    status: "Kenalan",
-                    favoriteItem: "ring",
-                    // Foto Realistis Unsplash (Wanita Mewah & Dewasa)
-                    sprite: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=800&auto=format&fit=crop"
-                }
-            }
-        };
+    <!-- Bottom Navigation Bar -->
+    <div id="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('map')">🗺️ Peta Kota</button>
+        <button class="tab-btn" onclick="openStatusModal()">❤️ Status Wanita</button>
+        <button class="tab-btn" onclick="openInventoryModal()">🎒 Hadiah</button>
+    </div>
+</div>
 
-        const seasons = ["Musim Semi", "Musim Panas", "Musim Gugur", "Musim Dingin"];
-        const timesOfDay = ["Pagi", "Siang", "Sore", "Malam"];
-        const daysOfWeek = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
+<script>
+    // --- FIREBASE CONFIGURATION ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyDummyKeyForTemplateOnly_UseYourOwnIfAvailable",
+        authDomain: "life-sim-37cf9.firebaseapp.com",
+        projectId: "life-sim-37cf9",
+        storageBucket: "life-sim-37cf9.appspot.com",
+        messagingSenderId: "10000000000",
+        appId: "1:10000000000:web:abcdef123456"
+    };
 
-        // LOKASI BACKGROUND REALISTIS
-        const locationBg = {
-            home: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop",
-            school: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1200&auto=format&fit=crop",
-            cafe: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=1200&auto=format&fit=crop",
-            mall: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1200&auto=format&fit=crop",
-            lounge: "https://images.unsplash.com/photo-1572116469696-31de0f17cc34?q=80&w=1200&auto=format&fit=crop",
-            park: "https://images.unsplash.com/photo-1519817650390-64a93db51149?q=80&w=1200&auto=format&fit=crop"
-        };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-        const itemsDB = {
-            boba: { name: "Boba Creamy Premium", price: 60, boost: 12, icon: "fa-glass-water", desc: "Minuman favorit Aoi saat waktu santai." },
-            chocolate: { name: "Cokelat Mewah Impor", price: 150, boost: 22, icon: "fa-cookie", desc: "Sangat disukai Mei yang manis." },
-            flowers: { name: "Buket Mawar Merah Glamor", price: 350, boost: 40, icon: "fa-spa", desc: "Sangat berkesan untuk wanita elegan seperti Rina." },
-            ring: { name: "Cincin Berlian Mewah", price: 2000, boost: 80, icon: "fa-ring", desc: "Syarat mutlak untuk melamar tunangan/menikah." }
-        };
-
-        const dialogueTree = {
-            "home_welcome": {
-                speaker: "Pikiranku",
-                text: "Hari baru yang indah di kota Sakura. Mau menyapa siapa hari ini?",
-                choices: [
-                    { text: "Buka Peta & Keluar Berpetualang (-10 Stamina)", action: "open_map" },
-                    { text: "Santai & Istirahat di Kamar (+20 Stamina)", action: "rest_home" }
-                ]
-            },
-            "school_study": {
-                speaker: "Kampus Seni",
-                text: "Suasana kampus terlihat ramai. Kamu melihat Aoi sedang membaca buku di dekat jendela.",
-                choices: [
-                    { text: "Sapa & Ngobrol dengan Aoi Kirishima", action: "talk_npc", npcId: "aoi" },
-                    { text: "Belajar Mandiri di Perpustakaan (+Kharisma, -20 Stamina)", action: "study" }
-                ]
-            },
-            "cafe_visit": {
-                speaker: "Kafe Lumiere",
-                text: "Aroma biji kopi arabika yang wangi memenuhi ruangan. Mei tersenyum manis melihatmu masuk.",
-                choices: [
-                    { text: "Sapa Mei Tachibana sang Barista", action: "talk_npc", npcId: "mei" },
-                    { text: "Kerja Paruh Waktu Barista (+200 Koin, -30 Stamina)", action: "work_cafe" }
-                ]
-            },
-            "lounge_visit": {
-                speaker: "Lounge VIP Nightclub",
-                text: "Musik jazz lembut membalut ruangan yang remang-remang. Rina duduk di bar dengan gaun mewahnya.",
-                choices: [
-                    { text: "Hampiri & Sapa Rina Takahashi", action: "talk_npc", npcId: "rina" }
-                ]
-            },
-            "park_visit": {
-                speaker: "Taman Bunga Sakura",
-                text: "Bunga kelopak sakura berguguran ditiup angin sore yang sejuk.",
-                choices: [
-                    { text: "Jalan-jalan Menikmati Pemandangan (+15 Stamina, -50 Koin)", action: "walk_park" }
-                ]
-            },
-            "talk_aoi_start": {
-                speaker: "Aoi Kirishima",
-                npcId: "aoi",
-                text: "Hai... Senang sekali bisa bertemu kamu di sini. Kamu mau menemaniku sebentar?",
-                choices: [
-                    { text: "Bicara tentang hobi & impian (+8 Affection, -10 Stamina)", action: "chat_npc", npcId: "aoi", boost: 8 },
-                    { text: "Beri Hadiah Cantik dari Tas", action: "give_gift_modal" }
-                ]
-            },
-            "talk_mei_start": {
-                speaker: "Mei Tachibana",
-                npcId: "mei",
-                text: "Selamat datang kembali! Spesial untukmu, aku buatkan racikan racikan kopi favoritmu hari ini~",
-                choices: [
-                    { text: "Puji senyum manisnya (+10 Affection, -10 Stamina)", action: "chat_npc", npcId: "mei", boost: 10 },
-                    { text: "Beri Hadiah Manis dari Tas", action: "give_gift_modal" }
-                ]
-            },
-            "talk_rina_start": {
-                speaker: "Rina Takahashi",
-                npcId: "rina",
-                text: "Oh, kamu datang? Gaya berpakaianmu malam ini lumayan juga... Kemari, duduk di sampingku.",
-                choices: [
-                    { text: "Puji penampilannya yang glamor (+12 Affection, -15 Stamina)", action: "chat_npc", npcId: "rina", boost: 12 },
-                    { text: "Beri Hadiah Spesial dari Tas", action: "give_gift_modal" }
-                ]
-            }
-        };
-
-        const elClockDay = document.getElementById("clock-day");
-        const elClockSeason = document.getElementById("clock-season");
-        const elTimeIcon = document.getElementById("time-icon");
-        const elStatStamina = document.getElementById("stat-stamina");
-        const elStatMaxStamina = document.getElementById("stat-max-stamina");
-        const elStatCoins = document.getElementById("stat-coins");
-        const elStatCharm = document.getElementById("stat-charm");
-
-        const elBgLayer = document.getElementById("bg-layer");
-        const elNpcSpriteContainer = document.getElementById("npc-sprite-container");
-        const elNpcSprite = document.getElementById("npc-sprite");
-        const elSpeakerName = document.getElementById("speaker-name");
-        const elDialogueText = document.getElementById("dialogue-text");
-        const elChoicesContainer = document.getElementById("choices-container");
-        const elMapView = document.getElementById("map-view");
-        const elRelationshipBadge = document.getElementById("relationship-badge");
-        const elNpcStatusText = document.getElementById("npc-status-text");
-        const elNpcAffectionVal = document.getElementById("npc-affection-val");
-
-        function renderScene() {
-            const dayName = daysOfWeek[(gameState.day - 1) % 7];
-            elClockDay.innerText = `Hari ${gameState.day} - ${dayName}`;
-            elClockSeason.innerText = `${seasons[gameState.season]} (${timesOfDay[gameState.timeOfDay]})`;
-            
-            elTimeIcon.className = gameState.timeOfDay === 3 
-                ? "fa-solid fa-moon text-indigo-400 text-sm md:text-base" 
-                : "fa-solid fa-sun text-amber-400 text-sm md:text-base";
-
-            elStatStamina.innerText = gameState.stamina;
-            elStatMaxStamina.innerText = gameState.maxStamina;
-            elStatCoins.innerText = gameState.coins;
-            elStatCharm.innerText = gameState.charm;
-
-            const bgUrl = locationBg[gameState.location] || locationBg["home"];
-            elBgLayer.style.backgroundImage = `url('${bgUrl}')`;
-
-            const currentDialogue = dialogueTree[gameState.dialogueKey] || dialogueTree["home_welcome"];
-            elSpeakerName.innerText = currentDialogue.speaker;
-            elDialogueText.innerText = currentDialogue.text;
-
-            // FOTO REALISTIS DISPLAY
-            if (currentDialogue.npcId && gameState.npcs[currentDialogue.npcId]) {
-                const npc = gameState.npcs[currentDialogue.npcId];
-                elNpcSprite.src = npc.sprite;
-                elNpcSpriteContainer.classList.remove("hidden");
-
-                elRelationshipBadge.classList.remove("hidden");
-                elRelationshipBadge.classList.add("flex");
-                elNpcStatusText.innerText = getRelationshipStatusTitle(npc.affection);
-                elNpcAffectionVal.innerText = npc.affection;
-            } else {
-                elNpcSpriteContainer.classList.add("hidden");
-                elRelationshipBadge.classList.add("hidden");
-                elRelationshipBadge.classList.remove("flex");
-            }
-
-            renderChoices(currentDialogue.choices);
+    // --- GAME STATE DATA ---
+    let gameState = {
+        userId: null,
+        day: 1,
+        timeOfDay: 0, // 0: Pagi, 1: Siang, 2: Malam
+        energy: 100,
+        money: 500,
+        relationships: {
+            aoi: { name: "Aoi (Mahasiswi Seni)", love: 10, status: "Kenalan", color: "#f472b6" },
+            mei: { name: "Mei (Barista Kafe)", love: 5, status: "Kenalan", color: "#38bdf8" },
+            rina: { name: "Rina (Model Papan Atas)", love: 0, status: "Orang Asing", color: "#a855f7" }
+        },
+        inventory: {
+            boba: 2,
+            chocolate: 1,
+            flowers: 0
         }
+    };
 
-        function getRelationshipStatusTitle(affection) {
-            if (affection >= 100) return "Istri / Menikah 💕";
-            if (affection >= 80) return "Tunangan 💍";
-            if (affection >= 60) return "Pacar Cantik ❤️";
-            if (affection >= 35) return "Teman Dekat ✨";
-            if (affection >= 15) return "Kenalan 😊";
-            return "Orang Baru 👋";
+    const timeNames = ["Pagi", "Siang", "Malam"];
+
+    // SVG Visual Portraits generator for reliable rendering without broken external images
+    function getVectorPortrait(characterKey) {
+        if (characterKey === 'aoi') {
+            return `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100%" height="100%" fill="#312e81"/>
+                <circle cx="100" cy="110" r="50" fill="#fbcfe8"/>
+                <path d="M 60 70 Q 100 20 140 70 Q 150 140 140 180 Q 100 170 60 180 Z" fill="#ec4899"/>
+                <circle cx="85" cy="105" r="6" fill="#1e1b4b"/>
+                <circle cx="115" cy="105" r="6" fill="#1e1b4b"/>
+                <path d="M 90 125 Q 100 135 110 125" stroke="#be185d" stroke-width="3" fill="none"/>
+                <path d="M 50 260 Q 100 190 150 260 Z" fill="#db2777"/>
+            </svg>`;
+        } else if (characterKey === 'mei') {
+            return `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100%" height="100%" fill="#0c4a6e"/>
+                <circle cx="100" cy="110" r="50" fill="#fde68a"/>
+                <path d="M 55 80 Q 100 30 145 80 Q 150 150 145 200 Q 100 180 55 200 Z" fill="#0284c7"/>
+                <circle cx="85" cy="105" r="6" fill="#0f172a"/>
+                <circle cx="115" cy="105" r="6" fill="#0f172a"/>
+                <path d="M 92 125 Q 100 130 108 125" stroke="#0369a1" stroke-width="3" fill="none"/>
+                <path d="M 50 260 Q 100 190 150 260 Z" fill="#38bdf8"/>
+            </svg>`;
+        } else if (characterKey === 'rina') {
+            return `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100%" height="100%" fill="#4c1d95"/>
+                <circle cx="100" cy="110" r="50" fill="#fed7aa"/>
+                <path d="M 50 60 Q 100 10 150 60 Q 160 160 150 220 Q 100 190 50 220 Z" fill="#7e22ce"/>
+                <circle cx="85" cy="105" r="6" fill="#2e1065"/>
+                <circle cx="115" cy="105" r="6" fill="#2e1065"/>
+                <path d="M 90 128 Q 100 135 110 128" stroke="#6b21a8" stroke-width="3" fill="none"/>
+                <path d="M 45 260 Q 100 185 155 260 Z" fill="#a855f7"/>
+            </svg>`;
         }
+        return '';
+    }
 
-        function renderChoices(choices) {
-            elChoicesContainer.innerHTML = "";
-            if (!choices || choices.length === 0) {
-                elChoicesContainer.classList.add("hidden");
-                return;
-            }
+    // --- GAME ENGINE FUNCTIONS ---
+    function updateUI() {
+        document.getElementById('time-display').innerText = `Hari ${gameState.day} - ${timeNames[gameState.timeOfDay]}`;
+        document.getElementById('energy-display').innerText = `${gameState.energy}/100`;
+        document.getElementById('money-display').innerText = gameState.money;
+    }
 
-            elChoicesContainer.classList.remove("hidden");
-            choices.forEach(c => {
-                const btn = document.createElement("button");
-                btn.className = "w-full py-2.5 px-4 glass-card hover:bg-pink-600/80 text-white rounded-xl text-xs sm:text-sm font-bold transition border border-pink-500/30 shadow-lg text-left flex justify-between items-center group";
-                btn.innerHTML = `
-                    <span>${c.text}</span>
-                    <i class="fa-solid fa-chevron-right text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                `;
-
-                btn.onclick = (e) => {
-                    e.stopPropagation();
-                    handleChoiceAction(c);
-                };
-
-                elChoicesContainer.appendChild(btn);
-            });
-        }
-
-        function handleChoiceAction(choice) {
-            if (choice.action === "open_map") {
-                elMapView.classList.remove("hidden");
-                elMapView.classList.add("flex");
-            } else if (choice.action === "rest_home") {
-                gameState.stamina = Math.min(gameState.maxStamina, gameState.stamina + 20);
-                showToast("Stamina pulih +20!");
-                advanceTime();
-            } else if (choice.action === "study") {
-                if (gameState.stamina < 20) { showToast("Stamina tidak cukup!"); return; }
-                gameState.stamina -= 20;
-                gameState.charm += 1;
-                showToast("Kharisma & Pesonamu bertambah +1!");
-                advanceTime();
-            } else if (choice.action === "work_cafe") {
-                if (gameState.stamina < 30) { showToast("Stamina tidak cukup!"); return; }
-                gameState.stamina -= 30;
-                gameState.coins += 200;
-                showToast("Kerja keras terbayar! +¥200 Koin!");
-                advanceTime();
-            } else if (choice.action === "walk_park") {
-                if (gameState.coins < 50) { showToast("Uang tidak cukup!"); return; }
-                gameState.coins -= 50;
-                gameState.stamina = Math.min(gameState.maxStamina, gameState.stamina + 15);
-                showToast("Menikmati udara segar di taman (+15 Stamina)");
-                advanceTime();
-            } else if (choice.action === "talk_npc") {
-                if (choice.npcId === "aoi") gameState.dialogueKey = "talk_aoi_start";
-                else if (choice.npcId === "mei") gameState.dialogueKey = "talk_mei_start";
-                else if (choice.npcId === "rina") gameState.dialogueKey = "talk_rina_start";
-                renderScene();
-            } else if (choice.action === "chat_npc") {
-                if (gameState.stamina < 10) { showToast("Stamina tidak cukup!"); return; }
-                gameState.stamina -= 10;
-                const npc = gameState.npcs[choice.npcId];
-                npc.affection = Math.min(100, npc.affection + choice.boost);
-                showToast(`Rasa cinta ${npc.name} bertambah +${choice.boost}%!`);
-                advanceTime();
-            } else if (choice.action === "give_gift_modal") {
-                openModal("modal-inventory");
-            }
-        }
-
-        function advanceTime() {
-            gameState.timeOfDay++;
-            if (gameState.timeOfDay > 3) {
-                sleepToNextDay();
-            } else {
-                renderScene();
-                autoSaveCloud();
-            }
-        }
-
-        function sleepToNextDay() {
-            gameState.day++;
+    function advanceTime() {
+        gameState.timeOfDay++;
+        if (gameState.timeOfDay > 2) {
             gameState.timeOfDay = 0;
-            gameState.stamina = gameState.maxStamina;
-            
-            if (gameState.day % 30 === 0) {
-                gameState.season = (gameState.season + 1) % 4;
-            }
+            gameState.day++;
+            gameState.energy = Math.min(100, gameState.energy + 40); // Recovery on new day
+            alert(`🌅 Hari berganti ke Hari ${gameState.day}! Stamina kamu telah dipulihkan.`);
+        }
+        updateUI();
+        autoSave();
+    }
 
-            gameState.location = "home";
-            gameState.dialogueKey = "home_welcome";
-            showToast(`Hari ke-${gameState.day} dimulai! Stamina pulih penuh.`);
-            renderScene();
-            autoSaveCloud();
+    function visitLocation(locKey) {
+        if (locKey === 'home') {
+            gameState.energy = 100;
+            advanceTime();
+            alert("🏠 Kamu beristirahat di apartemen. Stamina penuh kembali (100)!");
+            return;
         }
 
-        document.querySelectorAll(".loc-card").forEach(card => {
-            card.onclick = () => {
-                const loc = card.dataset.location;
-                gameState.location = loc;
-                elMapView.classList.add("hidden");
-                elMapView.classList.remove("flex");
+        if (gameState.energy < 15) {
+            alert("⚡ Stamina kamu terlalu rendah! Istirahatlah di apartemen terlebih dahulu.");
+            return;
+        }
 
-                if (loc === "home") gameState.dialogueKey = "home_welcome";
-                else if (loc === "school") gameState.dialogueKey = "school_study";
-                else if (loc === "cafe") gameState.dialogueKey = "cafe_visit";
-                else if (loc === "lounge") gameState.dialogueKey = "lounge_visit";
-                else if (loc === "park") gameState.dialogueKey = "park_visit";
-                else gameState.dialogueKey = "home_welcome";
+        if (locKey === 'campus') {
+            gameState.energy -= 20;
+            startVNScene('aoi', "🎓 Kampus Seni Sakura", "Kamu melihat Aoi sedang duduk melukis di galeri kampus.", [
+                { text: "Puji hasil lukisannya", action: () => addLove('aoi', 15, "Aoi tersenyum manis: 'Terima kasih! Kamu mengerti estetika seni.'") },
+                { text: "Ajak minum boba bersama", action: () => addLove('aoi', 10, "Aoi menerima tawaranmu dengan senang hati.") },
+                { text: "Tanya soal jadwal kuliah", action: () => addLove('aoi', 5, "Kalian mengobrol santai sejenak.") }
+            ]);
+        } else if (locKey === 'cafe') {
+            startVNScene('mei', "☕ Kafe Lumiere", "Mei menyambutmu di meja kasir dengan senyuman ramah.", [
+                { text: "Pesan Kopi & Ngobrol (-15 Stamina)", action: () => { gameState.energy -= 15; addLove('mei', 10, "Mei membuatkan kopi spesial untukmu."); } },
+                { text: "Bekerja Paruh Waktu (+200 Koin)", action: () => { gameState.energy -= 25; gameState.money += 200; advanceTime(); alert("💰 Kamu bekerja di kafe dan mendapatkan 200 Koin!"); showMapView(); } },
+                { text: "Kembali ke Peta", action: () => showMapView() }
+            ]);
+        } else if (locKey === 'lounge') {
+            gameState.energy -= 25;
+            startVNScene('rina', "🍸 Lounge VIP", "Rina anggun melambaikan tangan dari sofa VIP.", [
+                { text: "Pesan minuman termahal (-100 Koin)", action: () => {
+                    if (gameState.money >= 100) {
+                        gameState.money -= 100;
+                        addLove('rina', 20, "Rina terkesan dengan gayamu yang elegan.");
+                    } else {
+                        alert("Uang kamu tidak cukup!");
+                        showMapView();
+                    }
+                }},
+                { text: "Ajak berdansa santai", action: () => addLove('rina', 10, "Kalian berdansa menikmati musik malam.") }
+            ]);
+        } else if (locKey === 'mall') {
+            startShop();
+        } else if (locKey === 'park') {
+            gameState.energy -= 15;
+            alert("🌸 Kamu berjalan-jalan menikmati keindahan bunga sakura. Pikiranmu menjadi tenang!");
+            advanceTime();
+        }
+    }
 
-                renderScene();
+    function startVNScene(charKey, locName, text, options) {
+        document.getElementById('map-view').style.display = 'none';
+        document.getElementById('vn-view').style.display = 'flex';
+
+        document.getElementById('character-svg-container').innerHTML = getVectorPortrait(charKey);
+        document.getElementById('speaker-name').innerText = gameState.relationships[charKey].name;
+        document.getElementById('dialogue-text').innerText = text;
+
+        const optContainer = document.getElementById('options-container');
+        optContainer.innerHTML = '';
+
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.innerText = opt.text;
+            btn.onclick = () => {
+                opt.action();
             };
+            optContainer.appendChild(btn);
+        });
+    }
+
+    function addLove(charKey, amount, msg) {
+        gameState.relationships[charKey].love += amount;
+        
+        // Update status level
+        let love = gameState.relationships[charKey].love;
+        if (love >= 100) gameState.relationships[charKey].status = "Pacar / Tunangan";
+        else if (love >= 50) gameState.relationships[charKey].status = "Teman Dekat";
+        else if (love >= 20) gameState.relationships[charKey].status = "Teman Akrab";
+
+        alert(`${msg}\n\n❤️ Kasih Sayang +${amount} (Total: ${love})`);
+        advanceTime();
+        showMapView();
+    }
+
+    function showMapView() {
+        document.getElementById('map-view').style.display = 'grid';
+        document.getElementById('vn-view').style.display = 'none';
+        updateUI();
+    }
+
+    function startShop() {
+        document.getElementById('map-view').style.display = 'none';
+        document.getElementById('vn-view').style.display = 'flex';
+        document.getElementById('character-svg-container').innerHTML = '';
+        document.getElementById('speaker-name').innerText = "🛍️ Toko Hadiah";
+        document.getElementById('dialogue-text').innerText = "Selamat datang! Silakan pilih hadiah untuk diberikan kepada para wanita:";
+
+        const optContainer = document.getElementById('options-container');
+        optContainer.innerHTML = '';
+
+        const items = [
+            { id: 'boba', name: '🥤 Minuman Boba (50 Koin)', cost: 50 },
+            { id: 'chocolate', name: '🍫 Cokelat Impor (100 Koin)', cost: 100 },
+            { id: 'flowers', name: '💐 Buket Bunga Mawar (200 Koin)', cost: 200 }
+        ];
+
+        items.forEach(item => {
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-secondary';
+            btn.innerText = item.name;
+            btn.onclick = () => {
+                if (gameState.money >= item.cost) {
+                    gameState.money -= item.cost;
+                    gameState.inventory[item.id]++;
+                    alert(`Berhasil membeli ${item.name}!`);
+                    updateUI();
+                } else {
+                    alert("Koin kamu tidak cukup!");
+                }
+            };
+            optContainer.appendChild(btn);
         });
 
-        document.getElementById("btn-map").onclick = () => {
-            elMapView.classList.remove("hidden");
-            elMapView.classList.add("flex");
-        };
-        document.getElementById("btn-close-map").onclick = () => {
-            elMapView.classList.add("hidden");
-            elMapView.classList.remove("flex");
-        };
-        document.getElementById("btn-sleep").onclick = () => {
-            sleepToNextDay();
-        };
+        const backBtn = document.createElement('button');
+        backBtn.className = 'btn';
+        backBtn.innerText = "Kembali ke Peta";
+        backBtn.onclick = () => showMapView();
+        optContainer.appendChild(backBtn);
+    }
 
-        function renderInventoryTab(mode) {
-            const container = document.getElementById("inventory-content");
-            container.innerHTML = "";
+    // --- MODALS & TABS ---
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        if (tabName === 'map') {
+            document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            showMapView();
+        }
+    }
 
-            if (mode === "owned") {
-                Object.keys(itemsDB).forEach(key => {
-                    const count = gameState.inventory[key] || 0;
-                    const item = itemsDB[key];
+    function toggleModal(modalId) {
+        const modal = document.getElementById(modalId);
+        modal.style.display = (modal.style.display === 'block') ? 'none' : 'block';
+    }
 
-                    const card = document.createElement("div");
-                    card.className = "glass-card p-3 rounded-xl flex flex-col justify-between border border-slate-700/80";
-                    card.innerHTML = `
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <i class="fa-solid ${item.icon} text-pink-400 text-lg"></i>
-                                <div class="font-bold text-xs text-white">${item.name}</div>
-                            </div>
-                            <p class="text-[10px] text-slate-400 mb-2">${item.desc}</p>
-                            <div class="text-[11px] font-bold text-slate-300">Dimiliki: ${count}</div>
-                        </div>
-                        <button class="btn-give w-full mt-2 py-1 bg-pink-600 hover:bg-pink-500 rounded-lg text-xs font-bold transition ${count <= 0 ? 'opacity-40 cursor-not-allowed' : ''}">
-                            Berikan Hadiah (+${item.boost}%)
-                        </button>
-                    `;
+    function openStatusModal() {
+        const list = document.getElementById('relationships-list');
+        list.innerHTML = '';
+        Object.keys(gameState.relationships).forEach(key => {
+            const rel = gameState.relationships[key];
+            const div = document.createElement('div');
+            div.style.padding = '12px';
+            div.style.marginBottom = '10px';
+            div.style.background = 'rgba(255,255,255,0.05)';
+            div.style.borderRadius = '8px';
+            div.innerHTML = `
+                <div style="font-weight:bold; color:${rel.color}">${rel.name}</div>
+                <div style="font-size:0.85rem; color:#cbd5e1; margin-top:4px;">
+                    Hubungan: <b>${rel.status}</b> | Kasih Sayang: ❤️ <b>${rel.love} Poin</b>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+        toggleModal('status-modal');
+    }
 
-                    card.querySelector(".btn-give").onclick = () => {
-                        if (count > 0 && gameState.dialogueKey.startsWith("talk_")) {
-                            let npcId = "aoi";
-                            if (gameState.dialogueKey.includes("mei")) npcId = "mei";
-                            if (gameState.dialogueKey.includes("rina")) npcId = "rina";
+    function openInventoryModal() {
+        const list = document.getElementById('inventory-list');
+        list.innerHTML = '';
+        const items = [
+            { id: 'boba', name: '🥤 Minuman Boba' },
+            { id: 'chocolate', name: '🍫 Cokelat Impor' },
+            { id: 'flowers', name: '💐 Buket Bunga Mawar' }
+        ];
 
-                            const npc = gameState.npcs[npcId];
-                            
-                            gameState.inventory[key]--;
-                            let boost = item.boost;
-                            if (npc.favoriteItem === key) boost += 15;
+        items.forEach(item => {
+            const count = gameState.inventory[item.id] || 0;
+            const div = document.createElement('div');
+            div.style.padding = '12px';
+            div.style.marginBottom = '10px';
+            div.style.background = 'rgba(255,255,255,0.05)';
+            div.style.borderRadius = '8px';
+            div.style.display = 'flex';
+            div.style.justifySpaceBetween = 'space-between';
+            div.style.alignItems = 'center';
+            div.innerHTML = `
+                <span>${item.name} (Jumlah: <b>${count}</b>)</span>
+            `;
+            list.appendChild(div);
+        });
+        toggleModal('inventory-modal');
+    }
 
-                            npc.affection = Math.min(100, npc.affection + boost);
-                            showToast(`Memberikan ${item.name}! Affection ${npc.name} +${boost}%`);
-                            renderInventoryTab("owned");
-                            renderScene();
-                            autoSaveCloud();
-                        } else if (!gameState.dialogueKey.startsWith("talk_")) {
-                            showToast("Ajak bicara dulu salah satu wanita!");
-                        }
-                    };
+    // --- FIREBASE CLOUD SAVE SYSTEM ---
+    function autoSave() {
+        if (gameState.userId) {
+            db.collection('users').doc(gameState.userId).set(gameState, { merge: true })
+                .then(() => console.log("Cloud Auto-Saved"))
+                .catch(err => console.error("AutoSave Error:", err));
+        }
+    }
 
-                    container.appendChild(card);
-                });
+    function saveGameToCloud() {
+        if (!gameState.userId) {
+            alert("Harap login dulu untuk menyimpan ke cloud secara permanen!");
+            return;
+        }
+        db.collection('users').doc(gameState.userId).set(gameState)
+            .then(() => alert("✅ Progres berhasil disimpan online ke Cloud Firestore!"))
+            .catch(err => alert("Gagal menyimpan: " + err.message));
+    }
+
+    function loadGameFromCloud(uid) {
+        db.collection('users').doc(uid).get().then(doc => {
+            if (doc.exists) {
+                gameState = Object.assign(gameState, doc.data());
+                alert("🎮 Progres online ditemukan & dimuat!");
             } else {
-                Object.keys(itemsDB).forEach(key => {
-                    const item = itemsDB[key];
-                    const card = document.createElement("div");
-                    card.className = "glass-card p-3 rounded-xl flex flex-col justify-between border border-slate-700/80";
-                    card.innerHTML = `
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <i class="fa-solid ${item.icon} text-amber-400 text-lg"></i>
-                                <div class="font-bold text-xs text-white">${item.name}</div>
-                            </div>
-                            <p class="text-[10px] text-slate-400 mb-2">${item.desc}</p>
-                            <div class="text-[11px] font-bold text-amber-300">Harga: ¥${item.price}</div>
-                        </div>
-                        <button class="btn-buy w-full mt-2 py-1 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-xs font-bold transition">
-                            Beli Hadiah
-                        </button>
-                    `;
-
-                    card.querySelector(".btn-buy").onclick = () => {
-                        if (gameState.coins >= item.price) {
-                            gameState.coins -= item.price;
-                            gameState.inventory[key] = (gameState.inventory[key] || 0) + 1;
-                            showToast(`Berhasil membeli ${item.name}!`);
-                            renderInventoryTab("shop");
-                            renderScene();
-                            autoSaveCloud();
-                        } else {
-                            showToast("Uang / Koin tidak mencukupi!");
-                        }
-                    };
-
-                    container.appendChild(card);
-                });
+                alert("✨ Memulai cerita baru di akun kamu!");
             }
+            gameState.userId = uid;
+            document.getElementById('auth-overlay').style.display = 'none';
+            updateUI();
+        });
+    }
+
+    function handleLogin() {
+        const email = document.getElementById('auth-email').value;
+        const pass = document.getElementById('auth-password').value;
+
+        if (!email || !pass) {
+            alert("Masukkan Email & Sandi!");
+            return;
         }
 
-        document.getElementById("tab-inv-owned").onclick = () => {
-            document.getElementById("tab-inv-owned").className = "text-pink-400 font-bold border-b-2 border-pink-500 pb-1 text-sm";
-            document.getElementById("tab-inv-shop").className = "text-slate-400 font-semibold hover:text-slate-200 pb-1 text-sm";
-            renderInventoryTab("owned");
-        };
-        document.getElementById("tab-inv-shop").onclick = () => {
-            document.getElementById("tab-inv-shop").className = "text-pink-400 font-bold border-b-2 border-pink-500 pb-1 text-sm";
-            document.getElementById("tab-inv-owned").className = "text-slate-400 font-semibold hover:text-slate-200 pb-1 text-sm";
-            renderInventoryTab("shop");
-        };
-
-        function renderRelationshipsModal() {
-            const container = document.getElementById("npc-list-container");
-            container.innerHTML = "";
-
-            Object.keys(gameState.npcs).forEach(key => {
-                const npc = gameState.npcs[key];
-                const card = document.createElement("div");
-                card.className = "glass-card p-3 rounded-2xl flex items-center gap-3 border border-slate-700/80";
-                card.innerHTML = `
-                    <img src="${npc.sprite}" class="w-16 h-16 object-cover rounded-xl border border-pink-400/50 shadow-md">
-                    <div class="flex-1">
-                        <div class="flex justify-between items-center">
-                            <h4 class="font-bold text-sm text-pink-300 font-header">${npc.name}</h4>
-                            <span class="text-[10px] text-pink-400 font-bold bg-pink-950/80 px-2 py-0.5 rounded-full border border-pink-500/30">
-                                ${getRelationshipStatusTitle(npc.affection)}
-                            </span>
-                        </div>
-                        <p class="text-[11px] text-slate-300 mb-1">${npc.role}</p>
-                        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-700">
-                            <div class="bg-gradient-to-r from-pink-500 to-purple-500 h-full transition-all duration-500" style="width: ${npc.affection}%"></div>
-                        </div>
-                        <div class="text-[10px] text-slate-400 text-right mt-0.5">${npc.affection}% Affection</div>
-                    </div>
-                `;
-                container.appendChild(card);
+        auth.signInWithEmailAndPassword(email, pass)
+            .then(res => loadGameFromCloud(res.user.uid))
+            .catch(() => {
+                auth.createUserWithEmailAndPassword(email, pass)
+                    .then(res => loadGameFromCloud(res.user.uid))
+                    .catch(err => alert("Login Gagal: " + err.message));
             });
-        }
+    }
 
-        document.getElementById("nav-btn-story").onclick = () => { closeAllModals(); };
-        document.getElementById("nav-btn-relationships").onclick = () => {
-            renderRelationshipsModal();
-            openModal("modal-relationships");
-        };
-        document.getElementById("btn-inventory-modal").onclick = () => {
-            renderInventoryTab("owned");
-            openModal("modal-inventory");
-        };
-        document.getElementById("nav-btn-jobs").onclick = () => {
-            elMapView.classList.remove("hidden");
-            elMapView.classList.add("flex");
-        };
-        document.getElementById("nav-btn-account").onclick = () => { openModal("modal-auth"); };
+    function startGuestSession() {
+        gameState.userId = "guest_" + Math.random().toString(36).substring(7);
+        document.getElementById('auth-overlay').style.display = 'none';
+        updateUI();
+    }
 
-        function openModal(id) { document.getElementById(id).classList.remove("hidden"); }
-        function closeModal(id) { document.getElementById(id).classList.add("hidden"); }
-        function closeAllModals() {
-            document.querySelectorAll(".fixed").forEach(m => m.classList.add("hidden"));
-        }
-        document.querySelectorAll(".close-modal").forEach(btn => {
-            btn.onclick = () => closeAllModals();
-        });
-
-        function showToast(msg) {
-            const toast = document.getElementById("toast");
-            document.getElementById("toast-text").innerText = msg;
-            toast.classList.remove("hidden");
-            setTimeout(() => toast.classList.add("hidden"), 3000);
-        }
-
-        async function autoSaveCloud() {
-            if (!currentUser) return;
-            const cloudIcon = document.getElementById("cloud-icon");
-            const cloudText = document.getElementById("cloud-text");
-
-            cloudIcon.className = "fa-solid fa-spinner fa-spin text-amber-400";
-            cloudText.innerText = "Menyimpan...";
-
-            try {
-                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'saves', 'latest');
-                await setDoc(docRef, {
-                    gameState,
-                    savedAt: new Date().toISOString()
-                }, { merge: true });
-
-                cloudIcon.className = "fa-solid fa-cloud-check text-emerald-400";
-                cloudText.innerText = "Tersimpan";
-            } catch (err) {
-                console.error("Gagal simpan cloud:", err);
-                cloudIcon.className = "fa-solid fa-cloud-xmark text-rose-400";
-                cloudText.innerText = "Gagal Simpan";
-            }
-        }
-
-        async function loadCloudSave() {
-            if (!currentUser) return;
-            try {
-                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'saves', 'latest');
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists() && docSnap.data().gameState) {
-                    gameState = docSnap.data().gameState;
-                    showToast("Progres game berhasil dimuat dari Cloud!");
-                    renderScene();
-                } else {
-                    showToast("Belum ada simpanan Cloud.");
-                }
-            } catch (err) {
-                console.error("Gagal muat data:", err);
-                showToast("Gagal memuat Cloud.");
-            }
-        }
-
-        onAuthStateChanged(auth, async (user) => {
-            currentUser = user;
-            const loggedInState = document.getElementById("auth-state-loggedin");
-            const loggedOutState = document.getElementById("auth-state-loggedout");
-
-            if (user) {
-                loggedInState.classList.remove("hidden");
-                loggedInState.classList.add("flex");
-                loggedOutState.classList.add("hidden");
-
-                document.getElementById("user-display-email").innerText = user.isAnonymous ? "Mode Tamu / Guest" : user.email;
-                document.getElementById("user-display-uid").innerText = `UID: ${user.uid}`;
-
-                await loadCloudSave();
-            } else {
-                loggedInState.classList.add("hidden");
-                loggedOutState.classList.remove("hidden");
-                loggedOutState.classList.add("flex");
-            }
-        });
-
-        window.addEventListener("DOMContentLoaded", async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (e) {
-                await signInAnonymously(auth);
-            }
-            renderScene();
-        });
-
-        document.getElementById("btn-auth-signin").onclick = async () => {
-            const email = document.getElementById("input-auth-email").value;
-            const pass = document.getElementById("input-auth-pass").value;
-            try {
-                await signInWithEmailAndPassword(auth, email, pass);
-                showToast("Berhasil Masuk!");
-                closeModal("modal-auth");
-            } catch (e) {
-                showToast("Gagal Masuk: " + e.message);
-            }
-        };
-
-        document.getElementById("btn-auth-signup").onclick = async () => {
-            const email = document.getElementById("input-auth-email").value;
-            const pass = document.getElementById("input-auth-pass").value;
-            try {
-                await createUserWithEmailAndPassword(auth, email, pass);
-                showToast("Akun Berhasil Dibuat!");
-                closeModal("modal-auth");
-            } catch (e) {
-                showToast("Gagal Daftar: " + e.message);
-            }
-        };
-
-        document.getElementById("btn-auth-guest").onclick = async () => {
-            try {
-                await signInAnonymously(auth);
-                showToast("Masuk Mode Tamu");
-                closeModal("modal-auth");
-            } catch (e) {
-                showToast("Gagal masuk Guest");
-            }
-        };
-
-        document.getElementById("btn-logout").onclick = async () => {
-            await signOut(auth);
-            showToast("Berhasil Keluar");
-        };
-
-        document.getElementById("btn-save-cloud").onclick = async () => {
-            await autoSaveCloud();
-            showToast("Game Berhasil Disimpan di Cloud!");
-        };
-
-        document.getElementById("btn-load-cloud").onclick = async () => {
-            await loadCloudSave();
-        };
-
-        document.getElementById("btn-auth-status").onclick = () => {
-            openModal("modal-auth");
-        };
-    </script>
+    // Initialize UI on startup
+    updateUI();
+</script>
 </body>
 </html>
