@@ -12,9 +12,9 @@ const firebaseConfig = {
   appId: "1:807477304749:web:77493cca0b32ad73299524"
 };
 
-// Gemini API Key Kamu
-const GEMINI_API_KEY = "AQ.Ab8RN6KX48K6dftD18Wez4EU72SIK431voXNdy8jPyOfqdbViw";
-const MODEL_NAME = "gemini-3.6-flash";
+// Gemini API Key Kamu (Pastikan kunci dari Google AI Studio yang aktif)
+const GEMINI_API_KEY = "AQ.Ab8RN6KCLiAD_YKmQ-dP6ESFwN2OyT2t6VcsTNSMxDeuCnrD1Q";
+const MODEL_NAME = "gemini-1.5-flash";
 
 // Inisialisasi Firebase
 const app = initializeApp(firebaseConfig);
@@ -77,7 +77,7 @@ async function muatAtauBuatKarakter(uid) {
     tampilkanCeritaTerakhir();
   } catch (err) {
     console.error("Gagal memuat database:", err);
-    elStory.innerText = "Gagal memuat data game dari Firebase. Periksa koneksi atau izin database.";
+    elStory.innerText = "Gagal memuat data game dari Firebase. Pastikan aturan (Rules) Firestore sudah diatur ke 'allow read, write: if true;'.";
   }
 }
 
@@ -128,13 +128,13 @@ async function prosesPilihan(pilihan) {
 
   Tugasmu:
   1. Tuliskan kelanjutan narasi cerita yang menarik dan realistis berdasarkan pilihan tersebut (2-4 kalimat).
-  2. Tentukan perubahan status karakter (uang bisa bertambah/berkurang, energi naik/turun, stres naik/turun, umur bisa bertambah jika waktunya lewat).
-  3. Berikan 3 opsi aksi baru yang relevan untuk kelanjutan cerita berikutnya.
-  4. Berikan 1 kalimat ringkasan singkat dari kejadian ini untuk dimasukkan ke memori jangka panjang.
+  2. Tentukan perubahan status karakter (uang, energi, stres, umur bertambah jika waktunya lewat).
+  3. Berikan 3 opsi aksi baru yang relevan.
+  4. Berikan 1 kalimat ringkasan singkat dari kejadian ini untuk memori jangka panjang.
 
-  Balas HARUS dalam format JSON murni TANPA blok markdown code (seperti \`\`\`json):
+  PENTING: Berikan balasan HANYA dalam format JSON murni tanpa ada teks pembuka atau penutup. Contoh:
   {
-    "narasi": "Teks cerita...",
+    "narasi": "Teks cerita kelanjutan...",
     "perubahan": {
       "uang": 50,
       "energi": -10,
@@ -156,17 +156,23 @@ async function prosesPilihan(pilihan) {
     });
 
     const data = await response.json();
+    
     if (!data.candidates || data.candidates.length === 0) {
-      throw new Error("Respons AI kosong.");
+      throw new Error("Kunci API salah atau kuota habis.");
     }
 
-    let text = data.candidates[0].content.parts[0].text;
-    // Bersihkan format markdown jika AI tidak sengaja menyсерtakannya
-    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    let rawText = data.candidates[0].content.parts[0].text;
+    
+    // Pembersihan cerdas agar format JSON pasti terbaca meskipun AI menyertakan markdown
+    let jsonString = rawText;
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      jsonString = jsonMatch[0];
+    }
 
-    const hasil = JSON.parse(text);
+    const hasil = JSON.parse(jsonString);
 
-    // Update data lokal
+    // Update data lokal karakter
     characterData.uang += hasil.perubahan.uang || 0;
     characterData.energi = Math.max(0, Math.min(100, characterData.energi + (hasil.perubahan.energi || 0)));
     characterData.stres = Math.max(0, Math.min(100, characterData.stres + (hasil.perubahan.stres || 0)));
@@ -182,7 +188,7 @@ async function prosesPilihan(pilihan) {
       }
     }
 
-    // Simpan ke Firebase Firestore
+    // Simpan progres ke Firebase Firestore
     const userRef = doc(db, "users", currentUser.uid);
     await setDoc(userRef, characterData);
 
@@ -190,8 +196,8 @@ async function prosesPilihan(pilihan) {
     tampilkanCeritaTerakhir();
 
   } catch (err) {
-    console.error("Gagal memproses AI/Database:", err);
-    alert("Terjadi kesalahan saat memproses pilihan dengan AI. Coba klik tombol opsi sekali lagi.");
+    console.error("Detail Error AI:", err);
+    alert("Gagal terhubung ke AI. Pastikan API Key Gemini valid dan aktif di Google AI Studio.");
   } finally {
     tampilkanLoading(false);
   }
